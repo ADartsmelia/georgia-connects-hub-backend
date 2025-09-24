@@ -30,11 +30,8 @@ class OTPService {
    * Generate OTP for development/staging (fixed OTP)
    */
   static generateFixedOTP() {
-    const environment = process.env.NODE_ENV || "development";
-    if (environment === "development" || environment === "staging") {
-      return "4444"; // Fixed OTP for local and staging
-    }
-    return this.generateOTP();
+    // Always use fixed OTP for testing
+    return "4444"; // Fixed OTP for testing
   }
 
   /**
