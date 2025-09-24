@@ -151,13 +151,24 @@ app.use(
   express.static(path.join(__dirname, "../uploads"))
 );
 
-// Health check endpoint
+// Health check endpoints
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV,
+  });
+});
+
+// Versioned health check endpoint
+app.get(`/api/${API_VERSION}/health`, (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV,
+    version: API_VERSION,
   });
 });
 
