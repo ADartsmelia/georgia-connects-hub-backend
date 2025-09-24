@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
+// import rateLimit from "express-rate-limit"; // Removed for debugging
 import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
@@ -52,6 +52,9 @@ const app = express();
 // Trust proxy for rate limiting and X-Forwarded-For headers
 // This MUST be set before any middleware that uses req.ip
 app.set("trust proxy", 1);
+
+// Debug: Log trust proxy setting
+console.log("Trust proxy setting:", app.get("trust proxy"));
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -117,6 +120,9 @@ app.use(
   })
 );
 // app.use(limiter); // Temporarily disabled for testing
+
+// Debug: Log middleware setup
+console.log("Middleware setup complete - no rate limiting applied");
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
