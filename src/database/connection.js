@@ -72,7 +72,27 @@ let dbConfig = config[env];
 
 // For production, use DATABASE_URL directly if available
 if (env === "production" && process.env.DATABASE_URL) {
-  dbConfig = process.env.DATABASE_URL;
+  dbConfig = {
+    url: process.env.DATABASE_URL,
+    dialect: "postgres",
+    logging: false,
+    pool: {
+      max: 20,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+      useUTC: false,
+      dateStrings: true,
+      typeCast: true,
+    },
+    ssl: true,
+  };
 }
 
 // Create Sequelize instance using environment-specific config
