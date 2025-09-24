@@ -68,7 +68,12 @@ const config = {
 };
 
 const env = process.env.NODE_ENV || "development";
-const dbConfig = config[env];
+let dbConfig = config[env];
+
+// For production, use DATABASE_URL directly if available
+if (env === "production" && process.env.DATABASE_URL) {
+  dbConfig = process.env.DATABASE_URL;
+}
 
 // Create Sequelize instance using environment-specific config
 export const sequelize = new Sequelize(dbConfig);
