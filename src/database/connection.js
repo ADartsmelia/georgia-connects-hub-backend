@@ -63,6 +63,7 @@ const config = {
       dateStrings: true,
       typeCast: true,
     },
+    ssl: true,
   },
 };
 
