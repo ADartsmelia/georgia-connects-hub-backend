@@ -161,6 +161,9 @@ app.get("/health", (req, res) => {
   });
 });
 
+// API version constant
+const API_VERSION = process.env.API_VERSION || "v1";
+
 // Versioned health check endpoint
 app.get(`/api/${API_VERSION}/health`, (req, res) => {
   res.status(200).json({
@@ -190,7 +193,6 @@ app.get("/api-docs.json", (req, res) => {
 });
 
 // API routes
-const API_VERSION = process.env.API_VERSION || "v1";
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/users`, userRoutes);
 app.use(`/api/${API_VERSION}/posts`, postRoutes);
