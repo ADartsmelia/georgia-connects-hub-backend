@@ -70,10 +70,15 @@ const config = {
 const env = process.env.NODE_ENV || "development";
 let dbConfig = config[env];
 
-// For production, use DATABASE_URL directly if available
+// For production, parse DATABASE_URL and use individual parameters
 if (env === "production" && process.env.DATABASE_URL) {
+  const url = new URL(process.env.DATABASE_URL);
   dbConfig = {
-    url: process.env.DATABASE_URL,
+    host: url.hostname,
+    port: url.port,
+    database: url.pathname.slice(1),
+    username: url.username,
+    password: url.password,
     dialect: "postgres",
     logging: false,
     pool: {
