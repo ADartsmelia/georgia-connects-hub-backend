@@ -21,6 +21,8 @@ import { Notification } from "./Notification.js";
 import { OTP } from "./OTP.js";
 import Like from "./Like.js";
 import AgendaCheckIn from "./AgendaCheckIn.js";
+import Agenda from "./Agenda.js";
+import { SponsorPass } from "./SponsorPass.js";
 
 // User associations
 User.hasMany(Post, { foreignKey: "authorId", as: "posts" });
@@ -37,6 +39,13 @@ User.hasMany(Notification, { foreignKey: "userId", as: "notifications" });
 User.hasMany(OTP, { foreignKey: "userId", as: "otps" });
 User.hasMany(Like, { foreignKey: "userId", as: "likes" });
 User.hasMany(AgendaCheckIn, { foreignKey: "userId", as: "agendaCheckIns" });
+User.hasMany(SponsorPass, { foreignKey: "userId", as: "sponsorPasses" });
+User.hasMany(SponsorPass, {
+  foreignKey: "issuedBy",
+  as: "issuedSponsorPasses",
+});
+User.hasMany(User, { foreignKey: "assignedBy", as: "assignedUsers" });
+User.belongsTo(User, { foreignKey: "assignedBy", as: "assignedByUser" });
 
 // Connection associations
 User.belongsToMany(User, {
@@ -58,6 +67,7 @@ Connection.belongsTo(User, { foreignKey: "addresseeId", as: "addressee" });
 
 // Post associations
 Post.belongsTo(User, { foreignKey: "authorId", as: "author" });
+Post.belongsTo(User, { foreignKey: "approvedBy", as: "approver" });
 Post.belongsTo(Team, { foreignKey: "teamId", as: "team" });
 Post.hasMany(Comment, { foreignKey: "postId", as: "comments" });
 Post.hasMany(Like, { foreignKey: "postId", as: "likeRecords" });
@@ -124,8 +134,12 @@ Message.hasMany(Message, { foreignKey: "replyToId", as: "replies" });
 
 // Sponsor associations
 Sponsor.hasMany(Offer, { foreignKey: "sponsorId", as: "offers" });
+Sponsor.hasMany(SponsorPass, { foreignKey: "sponsorId", as: "sponsorPasses" });
 
 Offer.belongsTo(Sponsor, { foreignKey: "sponsorId", as: "sponsor" });
+SponsorPass.belongsTo(Sponsor, { foreignKey: "sponsorId", as: "sponsor" });
+SponsorPass.belongsTo(User, { foreignKey: "userId", as: "user" });
+SponsorPass.belongsTo(User, { foreignKey: "issuedBy", as: "issuedByUser" });
 
 // Quiz associations
 Quiz.belongsTo(User, { foreignKey: "creatorId", as: "creator" });
@@ -190,6 +204,10 @@ OTP.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 // AgendaCheckIn associations
 AgendaCheckIn.belongsTo(User, { foreignKey: "userId", as: "user" });
+AgendaCheckIn.belongsTo(Agenda, { foreignKey: "agendaId", as: "agenda" });
+
+// Agenda associations
+Agenda.hasMany(AgendaCheckIn, { foreignKey: "agendaId", as: "checkIns" });
 
 export {
   User,
@@ -215,4 +233,6 @@ export {
   OTP,
   Like,
   AgendaCheckIn,
+  Agenda,
+  SponsorPass,
 };

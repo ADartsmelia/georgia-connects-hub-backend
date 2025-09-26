@@ -1,5 +1,5 @@
 import express from "express";
-import { AgendaCheckIn } from "../models/index.js";
+import { AgendaCheckIn, Agenda } from "../models/index.js";
 import { authenticate } from "../middleware/auth.js";
 import { logger } from "../utils/logger.js";
 
@@ -13,28 +13,29 @@ router.get("/", authenticate, async (req, res) => {
     console.log("req.user:", req.user);
     console.log("userId from token:", userId);
 
+    // Get all agenda items
+    const agendaItems = await Agenda.findAll({
+      where: { isActive: true },
+      order: [
+        ["day", "ASC"],
+        ["itemIndex", "ASC"],
+        ["isParallel", "ASC"],
+      ],
+      raw: true,
+    });
+
     // Get all check-ins for the user
     console.log("Fetching check-ins for userId:", userId);
     const userCheckIns = await AgendaCheckIn.findAll({
       where: { userId },
-      attributes: [
-        "day",
-        "itemIndex",
-        "isParallel",
-        "time",
-        "title",
-        "checkedInAt",
-      ],
-      raw: true, // Get plain objects instead of Sequelize instances
+      attributes: ["agendaId", "checkedInAt"],
+      raw: true,
     });
-    console.log("Found userCheckIns:", userCheckIns);
 
     // Get check-in counts for all agenda items (aggregated)
     const checkInCounts = await AgendaCheckIn.findAll({
       attributes: [
-        "day",
-        "itemIndex",
-        "isParallel",
+        "agendaId",
         [
           AgendaCheckIn.sequelize.fn(
             "COUNT",
@@ -43,29 +44,58 @@ router.get("/", authenticate, async (req, res) => {
           "count",
         ],
       ],
-      group: ["day", "itemIndex", "isParallel"],
+      group: ["agendaId"],
       raw: true,
     });
 
     // Create objects for quick lookup
     const userCheckInMap = {};
     userCheckIns.forEach((checkIn) => {
-      const key = `${checkIn.day}-${checkIn.itemIndex}-${checkIn.isParallel}`;
-      userCheckInMap[key] = checkIn;
+      userCheckInMap[checkIn.agendaId] = checkIn;
     });
 
     const checkInCountMap = {};
     checkInCounts.forEach((item) => {
-      const key = `${item.day}-${item.itemIndex}-${item.isParallel}`;
-      checkInCountMap[key] = parseInt(item.count);
+      checkInCountMap[item.agendaId] = parseInt(item.count);
+    });
+
+    // Organize agenda data by day
+    const agendaByDay = {};
+    agendaItems.forEach((item) => {
+      if (!agendaByDay[item.day]) {
+        agendaByDay[item.day] = {
+          day: item.day,
+          items: [],
+          parallel: [],
+        };
+      }
+
+      const agendaItem = {
+        id: item.id,
+        time: item.time,
+        title: item.title,
+        requiresCheckIn: item.requiresCheckIn,
+        checkedIn: !!userCheckInMap[item.id],
+        checkInCount: checkInCountMap[item.id] || 0,
+      };
+
+      if (item.isParallel) {
+        agendaByDay[item.day].parallel.push(agendaItem);
+      } else {
+        agendaByDay[item.day].items.push(agendaItem);
+      }
+    });
+
+    // Convert to array format
+    const agendaData = Object.values(agendaByDay).sort((a, b) => {
+      const dayA = parseInt(a.day.replace("Day ", ""));
+      const dayB = parseInt(b.day.replace("Day ", ""));
+      return dayA - dayB;
     });
 
     res.json({
       success: true,
-      data: {
-        userCheckIns: userCheckInMap,
-        checkInCounts: checkInCountMap,
-      },
+      data: agendaData,
     });
   } catch (error) {
     logger.error("Error fetching agenda:", error);
@@ -80,14 +110,14 @@ router.get("/", authenticate, async (req, res) => {
 router.post("/checkin", authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { day, itemIndex, isParallel = false, time, title } = req.body;
+    const { agendaId } = req.body;
 
     // Validate required fields
-    if (day === undefined || itemIndex === undefined || !time || !title) {
-      logger.error("Missing required fields:", { day, itemIndex, time, title });
+    if (!agendaId) {
+      logger.error("Missing required field:", { agendaId });
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: day, itemIndex, time, title",
+        message: "Missing required field: agendaId",
       });
     }
 
@@ -95,9 +125,7 @@ router.post("/checkin", authenticate, async (req, res) => {
     const existingCheckIn = await AgendaCheckIn.findOne({
       where: {
         userId,
-        day,
-        itemIndex,
-        isParallel,
+        agendaId,
       },
     });
 
@@ -111,29 +139,19 @@ router.post("/checkin", authenticate, async (req, res) => {
     // Create check-in
     const checkIn = await AgendaCheckIn.create({
       userId,
-      day,
-      itemIndex,
-      isParallel,
-      time,
-      title,
+      agendaId,
     });
 
     // Get updated count for this agenda item
     const checkInCount = await AgendaCheckIn.count({
       where: {
-        day,
-        itemIndex,
-        isParallel,
+        agendaId,
       },
     });
 
-    logger.info(`User ${userId} checked in to agenda item: ${title}`, {
+    logger.info(`User ${userId} checked in to agenda item: ${agendaId}`, {
       userId,
-      day,
-      itemIndex,
-      isParallel,
-      time,
-      title,
+      agendaId,
       checkInCount,
     });
 
@@ -143,11 +161,7 @@ router.post("/checkin", authenticate, async (req, res) => {
       data: {
         checkIn: {
           id: checkIn.id,
-          day: checkIn.day,
-          itemIndex: checkIn.itemIndex,
-          isParallel: checkIn.isParallel,
-          time: checkIn.time,
-          title: checkIn.title,
+          agendaId: checkIn.agendaId,
           checkedInAt: checkIn.checkedInAt,
         },
         checkInCount,
@@ -170,11 +184,7 @@ router.get("/stats", authenticate, async (req, res) => {
 
     const stats = await AgendaCheckIn.findAll({
       attributes: [
-        "day",
-        "itemIndex",
-        "isParallel",
-        "time",
-        "title",
+        "agendaId",
         [
           AgendaCheckIn.sequelize.fn(
             "COUNT",
@@ -183,11 +193,18 @@ router.get("/stats", authenticate, async (req, res) => {
           "checkInCount",
         ],
       ],
-      group: ["day", "itemIndex", "isParallel", "time", "title"],
+      include: [
+        {
+          model: Agenda,
+          as: "agenda",
+          attributes: ["day", "itemIndex", "isParallel", "time", "title"],
+        },
+      ],
+      group: ["agendaId", "agenda.id"],
       order: [
-        ["day", "ASC"],
-        ["itemIndex", "ASC"],
-        ["isParallel", "ASC"],
+        [Agenda, "day", "ASC"],
+        [Agenda, "itemIndex", "ASC"],
+        [Agenda, "isParallel", "ASC"],
       ],
       raw: true,
     });

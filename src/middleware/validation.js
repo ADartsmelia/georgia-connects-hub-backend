@@ -77,11 +77,7 @@ export const completeProfileSchema = Joi.object({
       "any.only": "Please select a valid experience level",
       "any.required": "Experience level is required",
     }),
-  location: Joi.string().min(1).max(100).required().messages({
-    "string.min": "Location is required",
-    "string.max": "Location cannot exceed 100 characters",
-    "any.required": "Location is required",
-  }),
+  location: Joi.string().max(100).optional().allow(""),
   phoneNumber: Joi.string().optional().allow(""),
   bio: Joi.string().max(1000).optional().allow(""),
 });
@@ -396,6 +392,267 @@ export const validateQuery = (schema) => {
   };
 };
 
+// Admin validation schemas
+export const updateUserTypeSchema = Joi.object({
+  userType: Joi.string()
+    .valid("attendee", "speaker", "sponsor", "volunteer", "organizer", "admin")
+    .required()
+    .messages({
+      "any.only":
+        "User type must be one of: attendee, speaker, sponsor, volunteer, organizer, admin",
+      "any.required": "User type is required",
+    }),
+  passType: Joi.string()
+    .valid("day_pass", "full_pass", "none")
+    .optional()
+    .messages({
+      "any.only": "Pass type must be one of: day_pass, full_pass, none",
+    }),
+  adminNotes: Joi.string().max(1000).allow("").optional().messages({
+    "string.max": "Admin notes cannot exceed 1000 characters",
+  }),
+});
+
+export const approvePostSchema = Joi.object({
+  action: Joi.string().valid("approve", "reject").required().messages({
+    "any.only": "Action must be either 'approve' or 'reject'",
+    "any.required": "Action is required",
+  }),
+  rejectionReason: Joi.string()
+    .max(500)
+    .when("action", {
+      is: "reject",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "string.max": "Rejection reason cannot exceed 500 characters",
+      "any.required": "Rejection reason is required when rejecting a post",
+    }),
+});
+
+export const createSponsorPassSchema = Joi.object({
+  userId: Joi.string().uuid().required().messages({
+    "string.guid": "Please provide a valid user ID",
+    "any.required": "User ID is required",
+  }),
+  sponsorId: Joi.string().uuid().required().messages({
+    "string.guid": "Please provide a valid sponsor ID",
+    "any.required": "Sponsor ID is required",
+  }),
+  passType: Joi.string().valid("day_pass", "full_pass").required().messages({
+    "any.only": "Pass type must be either 'day_pass' or 'full_pass'",
+    "any.required": "Pass type is required",
+  }),
+  dayNumber: Joi.number()
+    .integer()
+    .min(1)
+    .max(7)
+    .when("passType", {
+      is: "day_pass",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "number.base": "Day number must be a number",
+      "number.integer": "Day number must be an integer",
+      "number.min": "Day number must be at least 1",
+      "number.max": "Day number cannot exceed 7",
+      "any.required": "Day number is required for day passes",
+    }),
+  notes: Joi.string().max(500).allow("").optional().messages({
+    "string.max": "Notes cannot exceed 500 characters",
+  }),
+});
+
+// Badge validation schemas
+export const createBadgeSchema = Joi.object({
+  name: Joi.string().min(1).max(100).required().messages({
+    "string.empty": "Badge name is required",
+    "string.min": "Badge name must be at least 1 character",
+    "string.max": "Badge name cannot exceed 100 characters",
+    "any.required": "Badge name is required",
+  }),
+  description: Joi.string().min(1).required().messages({
+    "string.empty": "Badge description is required",
+    "string.min": "Badge description must be at least 1 character",
+    "any.required": "Badge description is required",
+  }),
+  icon: Joi.string().uri().required().messages({
+    "string.empty": "Badge icon URL is required",
+    "string.uri": "Badge icon must be a valid URL",
+    "any.required": "Badge icon URL is required",
+  }),
+  category: Joi.string()
+    .valid("Networking", "Knowledge", "Engagement", "Special")
+    .required()
+    .messages({
+      "any.only":
+        "Category must be one of: Networking, Knowledge, Engagement, Special",
+      "any.required": "Category is required",
+    }),
+  rarity: Joi.string()
+    .valid("Common", "Rare", "Epic", "Legendary")
+    .default("Common")
+    .messages({
+      "any.only": "Rarity must be one of: Common, Rare, Epic, Legendary",
+    }),
+  requirements: Joi.object().required().messages({
+    "object.base": "Requirements must be an object",
+    "any.required": "Requirements are required",
+  }),
+  points: Joi.number().integer().min(0).default(0).messages({
+    "number.base": "Points must be a number",
+    "number.integer": "Points must be an integer",
+    "number.min": "Points cannot be negative",
+  }),
+  isActive: Joi.boolean().default(true).messages({
+    "boolean.base": "isActive must be a boolean",
+  }),
+  metadata: Joi.object().default({}).messages({
+    "object.base": "Metadata must be an object",
+  }),
+});
+
+export const updateBadgeSchema = Joi.object({
+  name: Joi.string().min(1).max(100).optional().messages({
+    "string.min": "Badge name must be at least 1 character",
+    "string.max": "Badge name cannot exceed 100 characters",
+  }),
+  description: Joi.string().min(1).optional().messages({
+    "string.min": "Badge description must be at least 1 character",
+  }),
+  icon: Joi.string().uri().optional().messages({
+    "string.uri": "Badge icon must be a valid URL",
+  }),
+  category: Joi.string()
+    .valid("Networking", "Knowledge", "Engagement", "Special")
+    .optional()
+    .messages({
+      "any.only":
+        "Category must be one of: Networking, Knowledge, Engagement, Special",
+    }),
+  rarity: Joi.string()
+    .valid("Common", "Rare", "Epic", "Legendary")
+    .optional()
+    .messages({
+      "any.only": "Rarity must be one of: Common, Rare, Epic, Legendary",
+    }),
+  requirements: Joi.object().optional().messages({
+    "object.base": "Requirements must be an object",
+  }),
+  points: Joi.number().integer().min(0).optional().messages({
+    "number.base": "Points must be a number",
+    "number.integer": "Points must be an integer",
+    "number.min": "Points cannot be negative",
+  }),
+  isActive: Joi.boolean().optional().messages({
+    "boolean.base": "isActive must be a boolean",
+  }),
+  metadata: Joi.object().optional().messages({
+    "object.base": "Metadata must be an object",
+  }),
+});
+
+export const assignBadgeSchema = Joi.object({
+  userId: Joi.string().uuid().required().messages({
+    "string.guid": "User ID must be a valid UUID",
+    "any.required": "User ID is required",
+  }),
+  badgeId: Joi.string().uuid().required().messages({
+    "string.guid": "Badge ID must be a valid UUID",
+    "any.required": "Badge ID is required",
+  }),
+  progress: Joi.number().integer().min(0).default(0).messages({
+    "number.base": "Progress must be a number",
+    "number.integer": "Progress must be an integer",
+    "number.min": "Progress cannot be negative",
+  }),
+  maxProgress: Joi.number().integer().min(1).required().messages({
+    "number.base": "Max progress must be a number",
+    "number.integer": "Max progress must be an integer",
+    "number.min": "Max progress must be at least 1",
+    "any.required": "Max progress is required",
+  }),
+  isEarned: Joi.boolean().default(false).messages({
+    "boolean.base": "isEarned must be a boolean",
+  }),
+});
+
+// OTP validation schemas
+export const sendEmailVerificationOTPSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+  userId: Joi.string().uuid().optional().messages({
+    "string.guid": "Please provide a valid user ID",
+  }),
+});
+
+export const sendPhoneVerificationOTPSchema = Joi.object({
+  phoneNumber: Joi.string().required().messages({
+    "any.required": "Phone number is required",
+  }),
+});
+
+export const sendPasswordResetOTPSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+});
+
+export const verifyOTPRecordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+  otp: Joi.string().required().messages({
+    "any.required": "OTP is required",
+  }),
+  purpose: Joi.string()
+    .valid(
+      "verification",
+      "login",
+      "password_reset",
+      "phone_verification",
+      "two_factor",
+      "account_recovery"
+    )
+    .required()
+    .messages({
+      "any.only":
+        "Purpose must be one of: verification, login, password_reset, phone_verification, two_factor, account_recovery",
+      "any.required": "Purpose is required",
+    }),
+});
+
+export const resendOTPSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+  purpose: Joi.string()
+    .valid(
+      "verification",
+      "login",
+      "password_reset",
+      "phone_verification",
+      "two_factor",
+      "account_recovery"
+    )
+    .required()
+    .messages({
+      "any.only":
+        "Purpose must be one of: verification, login, password_reset, phone_verification, two_factor, account_recovery",
+      "any.required": "Purpose is required",
+    }),
+  userId: Joi.string().uuid().optional().messages({
+    "string.guid": "Please provide a valid user ID",
+  }),
+});
+
 export default {
   validate,
   validateQuery,
@@ -417,4 +674,10 @@ export default {
   createContestSchema,
   createContestEntrySchema,
   createPlaylistSchema,
+  updateUserTypeSchema,
+  approvePostSchema,
+  createSponsorPassSchema,
+  createBadgeSchema,
+  updateBadgeSchema,
+  assignBadgeSchema,
 };

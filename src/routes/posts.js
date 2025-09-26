@@ -174,6 +174,7 @@ router.post(
       type: type || (imageFile ? "image" : "text"),
       teamId,
       tags: parsedTags || [],
+      approvalStatus: "pending", // All posts require admin approval
     };
 
     // Add image-specific data
@@ -255,6 +256,7 @@ router.get(
     const whereClause = {
       isPublic: true,
       isDeleted: false,
+      approvalStatus: "approved", // Only show approved posts by default
     };
 
     // Add filters
@@ -319,6 +321,77 @@ router.get(
   })
 );
 
+// Get user's own posts (including pending and rejected)
+router.get(
+  "/my-posts",
+  authenticate,
+  catchAsync(async (req, res) => {
+    const {
+      page = 1,
+      limit = 20,
+      type,
+      approvalStatus,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+    const whereClause = {
+      authorId: req.user.id,
+      isDeleted: false,
+    };
+
+    // Add filters
+    if (type) {
+      whereClause.type = type;
+    }
+
+    if (approvalStatus) {
+      whereClause.approvalStatus = approvalStatus;
+    }
+
+    const { count, rows: posts } = await Post.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "avatar",
+            "company",
+            "jobTitle",
+          ],
+        },
+        {
+          model: User,
+          as: "approver",
+          attributes: ["id", "firstName", "lastName"],
+        },
+      ],
+      order: [[sortBy, sortOrder.toUpperCase()]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    res.json({
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(count / limit),
+          totalPosts: count,
+          hasNext: page * limit < count,
+          hasPrev: page > 1,
+        },
+      },
+    });
+  })
+);
+
 // Get single post
 router.get(
   "/:id",
@@ -330,6 +403,7 @@ router.get(
       where: {
         isPublic: true,
         isDeleted: false,
+        approvalStatus: "approved", // Only show approved posts to users
       },
       include: [
         {

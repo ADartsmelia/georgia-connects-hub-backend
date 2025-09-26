@@ -11,13 +11,37 @@ if (
   process.env.SENDGRID_API_KEY.startsWith("SG.")
 ) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  logger.info("SendGrid API key configured successfully");
+} else {
+  logger.warn("SendGrid API key not configured or invalid format");
+  logger.warn(
+    "Current API key:",
+    process.env.SENDGRID_API_KEY
+      ? process.env.SENDGRID_API_KEY.substring(0, 10) + "..."
+      : "Missing"
+  );
+  logger.warn(
+    "API key starts with SG.:",
+    process.env.SENDGRID_API_KEY
+      ? process.env.SENDGRID_API_KEY.startsWith("SG.")
+      : false
+  );
+  logger.warn("Full API key check:", {
+    hasKey: !!process.env.SENDGRID_API_KEY,
+    keyLength: process.env.SENDGRID_API_KEY
+      ? process.env.SENDGRID_API_KEY.length
+      : 0,
+    startsWithSG: process.env.SENDGRID_API_KEY
+      ? process.env.SENDGRID_API_KEY.startsWith("SG.")
+      : false,
+  });
 }
 
 class OTPService {
   /**
    * Generate OTP code
    */
-  static generateOTP(length = 6) {
+  static generateOTP(length = 4) {
     const digits = "0123456789";
     let otp = "";
     for (let i = 0; i < length; i++) {
@@ -27,11 +51,11 @@ class OTPService {
   }
 
   /**
-   * Generate OTP for development/staging (fixed OTP)
+   * Generate OTP for development/staging (randomized OTP)
    */
   static generateFixedOTP() {
-    // Always use fixed OTP for testing
-    return "4444"; // Fixed OTP for testing
+    // Generate random OTP for testing (4 digits)
+    return this.generateOTP(4);
   }
 
   /**
@@ -56,8 +80,14 @@ class OTPService {
     try {
       const environment = process.env.NODE_ENV || "development";
 
-      // Don't send actual emails in development/staging with fixed OTP
-      if (environment === "development" || environment === "staging") {
+      // Testing real email sending with current SendGrid API key
+      // Set to false to disable real email sending
+      const shouldSendRealEmails = false; // Set to true to enable real email sending
+
+      if (
+        !shouldSendRealEmails &&
+        (environment === "development" || environment === "staging")
+      ) {
         logger.info(`OTP for ${email}: ${otp} (Fixed OTP for ${environment})`);
         return {
           success: true,
@@ -69,15 +99,37 @@ class OTPService {
       const msg = {
         to: email,
         from: {
-          email: process.env.FROM_EMAIL || "noreply@georgia-connects-hub.com",
-          name: process.env.FROM_NAME || "Georgia Connects Hub",
+          email:
+            process.env.SENDGRID_FROM_EMAIL ||
+            "achi.koroghlishvili@bene-exclusive.com",
+          name: "Networking Georgia",
         },
+        // replyTo: {
+        //   email: "noreply@networkinggeorgia.com",
+        //   name: "Networking Georgia Support",
+        // },
         subject: this.getEmailSubject(purpose),
         text: this.getEmailText(otp, purpose),
-        html: this.getEmailHTML(otp, purpose),
+        // html: `<h1>Your OTP Code: ${otp}</h1><p>This code will expire in 10 minutes.</p>`,
+        // Simplified configuration to match working direct test
       };
 
-      await sgMail.send(msg);
+      // Debug: Log the message being sent
+      logger.info("Sending email with SendGrid:", {
+        to: msg.to,
+        from: msg.from,
+        subject: msg.subject,
+        hasApiKey: !!process.env.SENDGRID_API_KEY,
+        apiKeyPrefix: process.env.SENDGRID_API_KEY
+          ? process.env.SENDGRID_API_KEY.substring(0, 10) + "..."
+          : "none",
+      });
+
+      // Reinitialize SendGrid client to ensure fresh instance
+      const sgMailFresh = await import("@sendgrid/mail");
+      sgMailFresh.default.setApiKey(process.env.SENDGRID_API_KEY);
+
+      await sgMailFresh.default.send(msg);
 
       logger.info(`OTP email sent successfully to ${email}`);
 
@@ -130,26 +182,26 @@ class OTPService {
    */
   static getEmailSubject(purpose) {
     const subjects = {
-      verification: "Verify Your Email - Georgia Connects Hub",
-      login: "Your Login Code - Georgia Connects Hub",
-      password_reset: "Password Reset Code - Georgia Connects Hub",
-      phone_verification: "Phone Verification Code - Georgia Connects Hub",
-      two_factor: "Two-Factor Authentication Code - Georgia Connects Hub",
+      verification: "Verify Your Email - Networking Georgia",
+      login: "Your Login Code - Networking Georgia",
+      password_reset: "Password Reset Code - Networking Georgia",
+      phone_verification: "Phone Verification Code - Networking Georgia",
+      two_factor: "Two-Factor Authentication Code - Networking Georgia",
     };
 
-    return subjects[purpose] || "Your Verification Code - Georgia Connects Hub";
+    return subjects[purpose] || "Your Verification Code - Networking Georgia";
   }
 
   /**
    * Get email text content
    */
   static getEmailText(otp, purpose) {
-    const baseText = `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.\n\nBest regards,\nGeorgia Connects Hub Team`;
+    const baseText = `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.\n\nBest regards,\nNetworking Georgia Team`;
 
     const purposeTexts = {
-      verification: `Welcome to Georgia Connects Hub!\n\nPlease use the following code to verify your email address:\n\n${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't create an account, please ignore this email.`,
-      login: `Someone requested a login code for your Georgia Connects Hub account.\n\nYour login code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf this wasn't you, please secure your account immediately.`,
-      password_reset: `You requested to reset your password for Georgia Connects Hub.\n\nYour reset code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this, please ignore this email.`,
+      verification: `Welcome to Networking Georgia!\n\nPlease use the following code to verify your email address:\n\n${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't create an account, please ignore this email.`,
+      login: `Someone requested a login code for your Networking Georgia account.\n\nYour login code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf this wasn't you, please secure your account immediately.`,
+      password_reset: `You requested to reset your password for Networking Georgia.\n\nYour reset code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this, please ignore this email.`,
     };
 
     return purposeTexts[purpose] || baseText;
@@ -161,38 +213,138 @@ class OTPService {
   static getEmailHTML(otp, purpose) {
     const baseHTML = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Verification Code</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Your Verification Code - Networking Georgia</title>
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-          .otp-code { background: #667eea; color: white; font-size: 32px; font-weight: bold; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; letter-spacing: 5px; }
-          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-          .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333333; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 0; 
+            background-color: #f8f9fa;
+          }
+          .container { 
+            background-color: #ffffff; 
+            margin: 20px auto; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .header { 
+            background-color: #1e40af; 
+            color: #ffffff; 
+            padding: 30px 20px; 
+            text-align: center; 
+          }
+          .header h1 { 
+            margin: 0; 
+            font-size: 24px; 
+            font-weight: 600; 
+          }
+          .header p { 
+            margin: 8px 0 0 0; 
+            font-size: 14px; 
+            opacity: 0.9; 
+          }
+          .content { 
+            padding: 30px 20px; 
+          }
+          .content h2 { 
+            margin: 0 0 20px 0; 
+            font-size: 20px; 
+            color: #1f2937; 
+          }
+          .content p { 
+            margin: 0 0 20px 0; 
+            font-size: 16px; 
+            color: #4b5563; 
+          }
+          .otp-container { 
+            text-align: center; 
+            margin: 30px 0; 
+          }
+          .otp-code { 
+            display: inline-block; 
+            background-color: #1e40af; 
+            color: #ffffff; 
+            font-size: 28px; 
+            font-weight: 700; 
+            padding: 20px 30px; 
+            border-radius: 8px; 
+            letter-spacing: 3px; 
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+          }
+          .expiry-notice { 
+            background-color: #fef3c7; 
+            border: 1px solid #f59e0b; 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin: 20px 0; 
+            font-size: 14px; 
+            color: #92400e; 
+          }
+          .security-notice { 
+            background-color: #f3f4f6; 
+            border-left: 4px solid #6b7280; 
+            padding: 15px; 
+            margin: 20px 0; 
+            font-size: 14px; 
+            color: #374151; 
+          }
+          .footer { 
+            background-color: #f9fafb; 
+            padding: 20px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #6b7280; 
+            border-top: 1px solid #e5e7eb; 
+          }
+          .footer p { 
+            margin: 5px 0; 
+          }
+          @media only screen and (max-width: 600px) {
+            .container { margin: 10px; }
+            .header, .content { padding: 20px 15px; }
+            .otp-code { font-size: 24px; padding: 15px 20px; }
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>Georgia Connects Hub</h1>
-          <p>Professional Networking Platform</p>
-        </div>
-        <div class="content">
-          <h2>Your Verification Code</h2>
-          <p>Please use the following code to complete your request:</p>
-          <div class="otp-code">${otp}</div>
-          <p>This code will expire in <strong>10 minutes</strong>.</p>
-          <div class="warning">
-            <strong>Security Notice:</strong> Never share this code with anyone. Georgia Connects Hub will never ask for your verification code via phone or email.
+        <div class="container">
+          <div class="header">
+            <h1>Networking Georgia</h1>
+            <p>Professional Networking Platform</p>
           </div>
-          <p>If you didn't request this code, please ignore this email and consider securing your account.</p>
-        </div>
-        <div class="footer">
-          <p>© 2024 Georgia Connects Hub. All rights reserved.</p>
-          <p>This is an automated message. Please do not reply to this email.</p>
+          <div class="content">
+            <h2>Your Verification Code</h2>
+            <p>Please use the following verification code to complete your request:</p>
+            <div class="otp-container">
+              <div class="otp-code">${otp}</div>
+            </div>
+            <div class="expiry-notice">
+              <strong>⏰ Expires in 10 minutes</strong><br>
+              This code will automatically expire for security reasons.
+            </div>
+            <div class="security-notice">
+              <strong>🔒 Security Notice:</strong><br>
+              • Never share this code with anyone<br>
+              • Networking Georgia will never ask for your verification code via phone or email<br>
+              • If you didn't request this code, please ignore this email
+            </div>
+            <p>If you have any questions or concerns, please contact our support team.</p>
+          </div>
+          <div class="footer">
+            <p>© 2024 Networking Georgia. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>If you need assistance, please contact us at support@networkinggeorgia.com</p>
+          </div>
         </div>
       </body>
       </html>
@@ -200,22 +352,22 @@ class OTPService {
 
     const purposeHTMLs = {
       verification: baseHTML
-        .replace("Your Verification Code", "Welcome to Georgia Connects Hub!")
+        .replace("Your Verification Code", "Welcome to Networking Georgia!")
         .replace(
-          "Please use the following code to complete your request:",
-          "Please use the following code to verify your email address:"
+          "Please use the following verification code to complete your request:",
+          "Please use the following verification code to verify your email address:"
         ),
       login: baseHTML
         .replace("Your Verification Code", "Login Verification")
         .replace(
-          "Please use the following code to complete your request:",
-          "Use this code to securely log into your account:"
+          "Please use the following verification code to complete your request:",
+          "Use this verification code to securely log into your account:"
         ),
       password_reset: baseHTML
         .replace("Your Verification Code", "Password Reset")
         .replace(
-          "Please use the following code to complete your request:",
-          "Use this code to reset your password:"
+          "Please use the following verification code to complete your request:",
+          "Use this verification code to reset your password:"
         ),
     };
 

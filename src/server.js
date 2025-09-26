@@ -1,3 +1,12 @@
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Load environment variables FIRST before any other imports
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -6,11 +15,26 @@ import compression from "compression";
 // import rateLimit from "express-rate-limit"; // Removed for debugging
 import { createServer } from "http";
 import { Server } from "socket.io";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 
-// Import routes
+// Routes will be imported after environment variables are loaded
+
+// Import middleware
+import { errorHandler } from "./middleware/errorHandler.js";
+import { notFound } from "./middleware/notFound.js";
+import { logger } from "./utils/logger.js";
+
+// Import socket handlers
+import { setupSocketHandlers } from "./socket/socketHandlers.js";
+
+// Import Swagger documentation
+import { specs, swaggerUi } from "./config/swagger.js";
+
+// Environment variables already loaded at the top
+
+// Import database connection after environment variables are loaded
+import { sequelize } from "./database/connection.js";
+
+// Import routes AFTER environment variables are loaded
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/posts.js";
@@ -24,28 +48,8 @@ import contestRoutes from "./routes/contests.js";
 import playlistRoutes from "./routes/playlist.js";
 import notificationRoutes from "./routes/notifications.js";
 import agendaRoutes from "./routes/agenda.js";
-// import uploadRoutes from "./routes/uploads.js";
-// import otpRoutes from "./routes/otp.js";
-
-// Import middleware
-import { errorHandler } from "./middleware/errorHandler.js";
-import { notFound } from "./middleware/notFound.js";
-import { logger } from "./utils/logger.js";
-
-// Import socket handlers
-import { setupSocketHandlers } from "./socket/socketHandlers.js";
-
-// Import Swagger documentation
-import { specs, swaggerUi } from "./config/swagger.js";
-
-// Load environment variables
-dotenv.config();
-
-// Import database connection after environment variables are loaded
-import { sequelize } from "./database/connection.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import adminRoutes from "./routes/admin.js";
+import otpRoutes from "./routes/otp.js";
 
 const app = express();
 
@@ -206,8 +210,9 @@ app.use(`/api/${API_VERSION}/contests`, contestRoutes);
 app.use(`/api/${API_VERSION}/playlist`, playlistRoutes);
 app.use(`/api/${API_VERSION}/notifications`, notificationRoutes);
 app.use(`/api/${API_VERSION}/agenda`, agendaRoutes);
+app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 // app.use(`/api/${API_VERSION}/uploads`, uploadRoutes);
-// app.use(`/api/${API_VERSION}/otp`, otpRoutes);
+app.use(`/api/${API_VERSION}/otp`, otpRoutes);
 
 // Setup socket.io handlers
 setupSocketHandlers(io);

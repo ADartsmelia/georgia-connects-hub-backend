@@ -198,6 +198,49 @@ export const User = sequelize.define(
         emailDigest: "weekly",
       },
     },
+    // Admin fields
+    userType: {
+      type: DataTypes.ENUM(
+        "unassigned",
+        "attendee",
+        "speaker",
+        "sponsor",
+        "volunteer",
+        "organizer",
+        "admin"
+      ),
+      defaultValue: "unassigned",
+      allowNull: false,
+    },
+    passType: {
+      type: DataTypes.ENUM("day_pass", "full_pass", "none"),
+      defaultValue: "none",
+      allowNull: false,
+    },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isSuperAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    adminNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    assignedBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+    assignedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",

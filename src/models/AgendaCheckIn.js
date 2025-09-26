@@ -18,30 +18,15 @@ const AgendaCheckIn = sequelize.define(
       },
       onDelete: "CASCADE",
     },
-    day: {
-      type: DataTypes.INTEGER,
+    agendaId: {
+      type: DataTypes.UUID,
       allowNull: false,
-      comment: "Day number (1, 2, etc.)",
-    },
-    itemIndex: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      comment: "Index of the agenda item",
-    },
-    isParallel: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: "Whether this is a parallel activity",
-    },
-    time: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: "Time slot of the agenda item",
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: "Title of the agenda item",
+      references: {
+        model: "agenda",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      comment: "Reference to the agenda item",
     },
     checkedInAt: {
       type: DataTypes.DATE,
@@ -55,11 +40,11 @@ const AgendaCheckIn = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ["userId", "day", "itemIndex", "isParallel"],
+        fields: ["userId", "agendaId"],
         name: "unique_user_agenda_checkin",
       },
       {
-        fields: ["day", "itemIndex", "isParallel"],
+        fields: ["agendaId"],
         name: "agenda_item_checkins",
       },
     ],

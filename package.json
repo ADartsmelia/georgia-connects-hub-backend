@@ -13,6 +13,7 @@
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seed.js",
     "cleanup-otps": "node src/scripts/cleanupOTPs.js",
+    "insert-agenda": "node scripts/insert-agenda-data.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },

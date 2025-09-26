@@ -1,16 +1,22 @@
-"use strict";
-
-const express = require("express");
-const router = express.Router();
-const { authenticate, optionalAuth } = require("../middleware/auth");
-const { validateRequest } = require("../middleware/validation");
-const {
+import express from "express";
+import { authenticate, optionalAuth } from "../middleware/auth.js";
+import {
+  validate,
+  sendEmailVerificationOTPSchema,
+  sendPhoneVerificationOTPSchema,
+  sendPasswordResetOTPSchema,
+  verifyOTPRecordSchema,
+  resendOTPSchema,
+} from "../middleware/validation.js";
+import {
   AppError,
   NotFoundError,
   ValidationError,
-} = require("../middleware/errorHandler");
-const { logger } = require("../utils/logger");
-const OTPService = require("../utils/otpService").default;
+} from "../middleware/errorHandler.js";
+import { logger } from "../utils/logger.js";
+import OTPService from "../utils/otpService.js";
+
+const router = express.Router();
 
 /**
  * @swagger
@@ -62,12 +68,7 @@ const OTPService = require("../utils/otpService").default;
 // Send email verification OTP
 router.post(
   "/send-email-verification",
-  validateRequest({
-    body: {
-      email: "string",
-      userId: "string",
-    },
-  }),
+  validate(sendEmailVerificationOTPSchema),
   async (req, res, next) => {
     try {
       const { email, userId } = req.body;
@@ -135,11 +136,7 @@ router.post(
 router.post(
   "/send-phone-verification",
   authenticate,
-  validateRequest({
-    body: {
-      phoneNumber: "string",
-    },
-  }),
+  validate(sendPhoneVerificationOTPSchema),
   async (req, res, next) => {
     try {
       const { phoneNumber } = req.body;
@@ -208,11 +205,7 @@ router.post(
 // Send password reset OTP
 router.post(
   "/send-password-reset",
-  validateRequest({
-    body: {
-      email: "string",
-    },
-  }),
+  validate(sendPasswordResetOTPSchema),
   async (req, res, next) => {
     try {
       const { email } = req.body;
@@ -336,13 +329,7 @@ router.post("/send-2fa", authenticate, async (req, res, next) => {
 // Verify OTP
 router.post(
   "/verify",
-  validateRequest({
-    body: {
-      email: "string",
-      otp: "string",
-      purpose: "string",
-    },
-  }),
+  validate(verifyOTPRecordSchema),
   async (req, res, next) => {
     try {
       const { email, otp, purpose } = req.body;
@@ -419,52 +406,42 @@ router.post(
  *               $ref: '#/components/schemas/Error'
  */
 // Resend OTP
-router.post(
-  "/resend",
-  validateRequest({
-    body: {
-      email: "string",
-      purpose: "string",
-      userId: "string",
-    },
-  }),
-  async (req, res, next) => {
-    try {
-      const { email, purpose, userId } = req.body;
+router.post("/resend", validate(resendOTPSchema), async (req, res, next) => {
+  try {
+    const { email, purpose, userId } = req.body;
 
-      let result;
-      switch (purpose) {
-        case "verification":
-          result = await OTPService.sendEmailVerificationOTP(email, userId);
-          break;
-        case "password_reset":
-          result = await OTPService.sendPasswordResetOTP(email);
-          break;
-        case "two_factor":
-          if (!userId) {
-            throw new ValidationError("User ID is required for 2FA");
-          }
-          result = await OTPService.send2FAOTP(email, userId);
-          break;
-        default:
-          throw new ValidationError("Invalid purpose for resending OTP");
-      }
-
-      res.json({
-        success: result.success,
-        message: result.message,
-        data: {
-          otpRecordId: result.otpRecordId,
-          // Include OTP in response for development/staging
-          ...(result.otp && { otp: result.otp }),
-        },
-      });
-    } catch (error) {
-      logger.error("Error resending OTP:", error);
-      next(error);
+    let result;
+    switch (purpose) {
+      case "verification":
+        result = await OTPService.sendEmailVerificationOTP(email, userId);
+        break;
+      case "password_reset":
+        result = await OTPService.sendPasswordResetOTP(email);
+        break;
+      case "two_factor":
+        if (!userId) {
+          throw new ValidationError("User ID is required for 2FA");
+        }
+        result = await OTPService.send2FAOTP(email, userId);
+        break;
+      default:
+        throw new ValidationError("Invalid purpose for resending OTP");
     }
+
+    res.json({
+      success: result.success,
+      message: result.message,
+      data: {
+        otpRecordId: result.otpRecordId,
+        // Include OTP in response for development/staging
+        ...(result.otp && { otp: result.otp }),
+      },
+    });
+  } catch (error) {
+    logger.error("Error resending OTP:", error);
+    next(error);
   }
-);
+});
 
 /**
  * @swagger
@@ -530,4 +507,4 @@ router.post("/cleanup", authenticate, async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;
