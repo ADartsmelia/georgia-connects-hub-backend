@@ -14,6 +14,9 @@ import {
   registerSchema,
   loginSchema,
   verifyOTPSchema,
+  sendPasswordResetOTPSchema,
+  resetPasswordWithOTPSchema,
+  sendEmailVerificationOTPSchema,
 } from "../middleware/validation.js";
 import {
   catchAsync,
@@ -21,6 +24,7 @@ import {
   ValidationError,
   AuthenticationError,
   ConflictError,
+  NotFoundError,
 } from "../middleware/errorHandler.js";
 import { logger } from "../utils/logger.js";
 import { sendEmail } from "../utils/email.js";
@@ -570,11 +574,7 @@ router.post(
 // Send verification OTP
 router.post(
   "/send-verification-otp",
-  validate({
-    body: {
-      email: "string",
-    },
-  }),
+  validate(sendEmailVerificationOTPSchema),
   catchAsync(async (req, res) => {
     const { email } = req.body;
 
@@ -751,11 +751,7 @@ router.post(
 // Send password reset OTP
 router.post(
   "/send-password-reset-otp",
-  validate({
-    body: {
-      email: "string",
-    },
-  }),
+  validate(sendPasswordResetOTPSchema),
   catchAsync(async (req, res) => {
     const { email } = req.body;
 
@@ -827,13 +823,7 @@ router.post(
 // Reset password with OTP
 router.post(
   "/reset-password-with-otp",
-  validate({
-    body: {
-      email: "string",
-      otp: "string",
-      newPassword: "string",
-    },
-  }),
+  validate(resetPasswordWithOTPSchema),
   catchAsync(async (req, res) => {
     const { email, otp, newPassword } = req.body;
 

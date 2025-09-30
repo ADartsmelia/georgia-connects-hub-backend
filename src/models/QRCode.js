@@ -20,6 +20,7 @@ const QRCode = sequelize.define(
       allowNull: false,
       defaultValue: "day_pass",
       comment: "Type of pass - day or full event",
+      field: "pass_type",
     },
     userId: {
       type: DataTypes.UUID,
@@ -75,7 +76,7 @@ const QRCode = sequelize.define(
         fields: ["status"],
       },
       {
-        fields: ["passType"],
+        fields: ["pass_type"],
       },
       {
         fields: ["createdAt"],
