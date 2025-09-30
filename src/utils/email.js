@@ -230,10 +230,8 @@ const templates = {
             <h2>Your Event Pass is Ready!</h2>
           </div>
           <div class="content">
-            <!-- Banner Image Placeholder -->
-            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
-              🎟️ Networking Georgia 2025
-            </div>
+            <!-- Banner Image -->
+            <img src="{{banner-image}}" alt="Networking Georgia Banner" class="banner">
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -274,17 +272,13 @@ const templates = {
               <h3>📱 თქვენი QR კოდი</h3>
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
-              <div style="text-align: center; margin: 20px 0; padding: 20px; background: white; border: 2px solid #ddd; border-radius: 8px;">
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">📱 Your QR Code</div>
-                <div style="font-family: monospace; font-size: 16px; background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">{{qrCode}}</div>
-                <div style="font-size: 12px; color: #666; margin-top: 10px;">Please save this code or take a screenshot</div>
+              <div style="text-align: center; margin: 20px 0;">
+                <img src="{{qr-code-image}}" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
               </div>
             </div>
           </div>
           <div class="footer">
-            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
-              NG
-            </div>
+            <img src="{{main-logo}}" alt="Networking Georgia Logo" class="logo">
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
@@ -310,58 +304,39 @@ export const sendEmail = async ({
       throw new Error(`Email template '${template}' not found`);
     }
 
-    // Compile template first (without base64 data)
-    const compiledTemplate = handlebars.compile(emailTemplate.template);
-    const html = compiledTemplate(data);
-
-    // Prepare SendGrid attachments with proper inline content_id
-    const sendGridAttachments = attachments
-      .map((attachment) => {
+    // Prepare base64 images for inline embedding in HTML
+    const imageData = {};
+    attachments.forEach((attachment) => {
+      if (attachment.cid) {
         try {
+          let base64Content;
           if (attachment.path) {
             // Check if file exists
             if (!fs.existsSync(attachment.path)) {
               logger.error(`Image file not found: ${attachment.path}`);
-              return null;
+              return;
             }
             const fileContent = fs.readFileSync(attachment.path);
-            logger.info(
-              `Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`
-            );
-            return {
-              content: fileContent.toString("base64"),
-              filename: attachment.filename,
-              type: attachment.contentType || "image/png",
-              disposition: attachment.cid ? "inline" : "attachment",
-              content_id: attachment.cid, // Use content_id for SendGrid inline attachments
-              cid: attachment.cid, // Also include cid for compatibility
-            };
+            base64Content = fileContent.toString("base64");
+            logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
           } else {
-            logger.info(
-              `Loaded image from buffer, size: ${attachment.content.length} bytes`
-            );
-            return {
-              content: attachment.content.toString("base64"),
-              filename: attachment.filename,
-              type: attachment.contentType || "image/png",
-              disposition: attachment.cid ? "inline" : "attachment",
-              content_id: attachment.cid, // Use content_id for SendGrid inline attachments
-              cid: attachment.cid, // Also include cid for compatibility
-            };
+            base64Content = attachment.content.toString("base64");
+            logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
           }
+          imageData[attachment.cid] = `data:${attachment.contentType || "image/png"};base64,${base64Content}`;
+          logger.info(`Created data URL for ${attachment.cid}, length: ${imageData[attachment.cid].length}`);
         } catch (error) {
-          logger.error(
-            `Error processing attachment ${attachment.filename}:`,
-            error.message
-          );
-          return null;
+          logger.error(`Error processing image ${attachment.cid}:`, error.message);
         }
-      })
-      .filter(Boolean); // Remove null entries
+      }
+    });
 
-    logger.info(
-      `Prepared ${sendGridAttachments.length} attachments for SendGrid`
-    );
+    // Compile template with image data
+    const templateData = { ...data, ...imageData };
+    const compiledTemplate = handlebars.compile(emailTemplate.template);
+    const html = compiledTemplate(templateData);
+
+    logger.info(`Compiled HTML with ${Object.keys(imageData).length} embedded images`);
 
     // SendGrid message
     const msg = {
@@ -373,7 +348,7 @@ export const sendEmail = async ({
       },
       subject: emailTemplate.subject || subject,
       html: html,
-      // No attachments - using text-based design instead of images
+      // No attachments - images are embedded as base64 data URLs in HTML
     };
 
     // Debug logging
