@@ -231,7 +231,7 @@ const templates = {
           </div>
           <div class="content">
             <!-- Banner Image -->
-            <img src="{{banner-image}}" alt="Networking Georgia Banner" class="banner">
+            <img src="cid:banner-image" alt="Networking Georgia Banner" class="banner">
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -273,12 +273,12 @@ const templates = {
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
               <div style="text-align: center; margin: 20px 0;">
-                <img src="{{qr-code-image}}" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
+                <img src="cid:qr-code-image" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
               </div>
             </div>
           </div>
           <div class="footer">
-            <img src="{{main-logo}}" alt="Networking Georgia Logo" class="logo">
+            <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
@@ -304,62 +304,40 @@ export const sendEmail = async ({
       throw new Error(`Email template '${template}' not found`);
     }
 
-    // Prepare base64 images for inline embedding
-    const imageData = {};
-    attachments.forEach((attachment) => {
-      if (attachment.cid) {
-        let base64Content;
-        if (attachment.path) {
-          // Check if file exists
-          if (!fs.existsSync(attachment.path)) {
-            logger.error(`Image file not found: ${attachment.path}`);
-            return;
-          }
-          const fileContent = fs.readFileSync(attachment.path);
-          base64Content = fileContent.toString("base64");
-          logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
-        } else {
-          base64Content = attachment.content.toString("base64");
-          logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
-        }
-        imageData[attachment.cid] = `data:${
-          attachment.contentType || "image/png"
-        };base64,${base64Content}`;
-        logger.info(`Created data URL for ${attachment.cid}, length: ${imageData[attachment.cid].length}`);
-      }
-    });
-
-    // Compile template with image data
-    const templateData = { ...data, ...imageData };
+    // Compile template first (without base64 data)
     const compiledTemplate = handlebars.compile(emailTemplate.template);
-    const html = compiledTemplate(templateData);
+    const html = compiledTemplate(data);
 
-    // Debug: Log template data and HTML snippet
-    logger.info("Template data keys:", Object.keys(templateData));
-    logger.info("Image data keys:", Object.keys(imageData));
-    logger.info("HTML snippet (first 500 chars):", html.substring(0, 500));
-
-    // Only include non-inline attachments
-    const sendGridAttachments = attachments
-      .filter((attachment) => !attachment.cid) // Only non-inline attachments
-      .map((attachment) => {
-        if (attachment.path) {
-          const fileContent = fs.readFileSync(attachment.path);
-          return {
-            content: fileContent.toString("base64"),
-            filename: attachment.filename,
-            type: attachment.contentType || "image/png",
-            disposition: "attachment",
-          };
-        } else {
-          return {
-            content: attachment.content.toString("base64"),
-            filename: attachment.filename,
-            type: attachment.contentType || "image/png",
-            disposition: "attachment",
-          };
+    // Prepare SendGrid attachments with proper inline content_id
+    const sendGridAttachments = attachments.map((attachment) => {
+      if (attachment.path) {
+        // Check if file exists
+        if (!fs.existsSync(attachment.path)) {
+          logger.error(`Image file not found: ${attachment.path}`);
+          return null;
         }
-      });
+        const fileContent = fs.readFileSync(attachment.path);
+        logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
+        return {
+          content: fileContent.toString("base64"),
+          filename: attachment.filename,
+          type: attachment.contentType || "image/png",
+          disposition: attachment.cid ? "inline" : "attachment",
+          content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+        };
+      } else {
+        logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
+        return {
+          content: attachment.content.toString("base64"),
+          filename: attachment.filename,
+          type: attachment.contentType || "image/png",
+          disposition: attachment.cid ? "inline" : "attachment",
+          content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+        };
+      }
+    }).filter(Boolean); // Remove null entries
+
+    logger.info(`Prepared ${sendGridAttachments.length} attachments for SendGrid`);
 
     // SendGrid message
     const msg = {
