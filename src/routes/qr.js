@@ -388,22 +388,6 @@ router.post(
           contentType: "image/png",
           cid: "qr-code-image",
         },
-        {
-          filename: "banner.png",
-          path: path.join(
-            __dirname,
-            "../../../georgia-connects-hub/src/assets/Main.png"
-          ),
-          cid: "banner-image",
-        },
-        {
-          filename: "main-logo.png",
-          path: path.join(
-            __dirname,
-            "../../../georgia-connects-hub/src/assets/Main.png"
-          ),
-          cid: "main-logo",
-        },
       ];
 
       // Send email with QR code attachment

@@ -230,8 +230,10 @@ const templates = {
             <h2>Your Event Pass is Ready!</h2>
           </div>
           <div class="content">
-            <!-- Banner Image -->
-            <img src="cid:banner-image" alt="Networking Georgia Banner" class="banner">
+            <!-- Banner Image Placeholder -->
+            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">
+              🎟️ Networking Georgia 2025
+            </div>
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -306,7 +308,9 @@ const templates = {
             </div>
           </div>
           <div class="footer">
-            <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
+            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
+              NG
+            </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>You're receiving this email because you registered for our event.</p>
             
@@ -345,25 +349,25 @@ export const sendEmail = async ({
     const html = compiledTemplate(data);
 
     // Prepare attachments for SendGrid
-    const sendGridAttachments = attachments.map(attachment => {
+    const sendGridAttachments = attachments.map((attachment) => {
       if (attachment.path) {
         // Read file from path
         const fileContent = fs.readFileSync(attachment.path);
         return {
-          content: fileContent.toString('base64'),
+          content: fileContent.toString("base64"),
           filename: attachment.filename,
-          type: attachment.contentType || 'image/png',
-          disposition: 'attachment',
-          contentId: attachment.cid
+          type: attachment.contentType || "image/png",
+          disposition: "attachment",
+          contentId: attachment.cid,
         };
       } else {
         // Use buffer content
         return {
-          content: attachment.content.toString('base64'),
+          content: attachment.content.toString("base64"),
           filename: attachment.filename,
-          type: attachment.contentType || 'image/png',
-          disposition: 'attachment',
-          contentId: attachment.cid
+          type: attachment.contentType || "image/png",
+          disposition: "attachment",
+          contentId: attachment.cid,
         };
       }
     });
@@ -373,11 +377,11 @@ export const sendEmail = async ({
       to: email,
       from: {
         email: process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER,
-        name: process.env.SENDGRID_FROM_NAME || "Networking Georgia"
+        name: process.env.SENDGRID_FROM_NAME || "Networking Georgia",
       },
       subject: emailTemplate.subject || subject,
       html: html,
-      attachments: sendGridAttachments
+      attachments: sendGridAttachments,
     };
 
     // Send email via SendGrid
@@ -386,7 +390,7 @@ export const sendEmail = async ({
     logger.info("Email sent successfully via SendGrid", {
       to: email,
       subject: msg.subject,
-      messageId: response[0].headers['x-message-id'],
+      messageId: response[0].headers["x-message-id"],
       attachments: attachments.length,
     });
 
@@ -424,7 +428,7 @@ export const testEmailConfig = async () => {
     if (!process.env.SENDGRID_API_KEY) {
       throw new Error("SENDGRID_API_KEY is not configured");
     }
-    
+
     logger.info("SendGrid configuration is valid");
     return true;
   } catch (error) {
