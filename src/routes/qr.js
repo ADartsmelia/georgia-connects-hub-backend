@@ -9,11 +9,19 @@ const router = express.Router();
 /**
  * Generate a unique QR code
  * POST /api/v1/qr/generate
- * Body: { userEmail?: string }
+ * Body: { userEmail?: string, passType?: 'day_pass' | 'full_pass' }
  */
 router.post("/generate", async (req, res) => {
   try {
-    const { userEmail } = req.body;
+    const { userEmail, passType = "day_pass" } = req.body;
+
+    // Validate passType
+    if (passType && !["day_pass", "full_pass"].includes(passType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pass type. Must be 'day_pass' or 'full_pass'",
+      });
+    }
 
     // Generate unique code
     const code = crypto.randomBytes(16).toString("hex");
@@ -30,6 +38,7 @@ router.post("/generate", async (req, res) => {
     // Create QR code record
     const qrCode = await QRCode.create({
       code,
+      passType,
       userId,
       status: "active",
     });
@@ -40,6 +49,7 @@ router.post("/generate", async (req, res) => {
       data: {
         id: qrCode.id,
         code: qrCode.code,
+        passType: qrCode.passType,
         userId: qrCode.userId,
         status: qrCode.status,
         createdAt: qrCode.createdAt,
