@@ -336,13 +336,22 @@ export const sendEmail = async ({
     const msg = {
       to: email,
       from: {
-        email: process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER,
+        email: process.env.SENDGRID_FROM_EMAIL || "noreply@networkinggeorgia.com",
         name: process.env.SENDGRID_FROM_NAME || "Networking Georgia",
       },
       subject: emailTemplate.subject || subject,
       html: html,
-      attachments: sendGridAttachments,
+      attachments: sendGridAttachments.length > 0 ? sendGridAttachments : undefined,
     };
+
+    // Debug logging
+    logger.info("Sending email via SendGrid", {
+      to: email,
+      from: msg.from.email,
+      subject: msg.subject,
+      attachmentsCount: sendGridAttachments.length,
+      htmlLength: html.length,
+    });
 
     // Send email via SendGrid
     const response = await sgMail.send(msg);
@@ -360,6 +369,8 @@ export const sendEmail = async ({
       to: email,
       template,
       error: error.message,
+      response: error.response?.body,
+      statusCode: error.response?.statusCode,
     });
     throw error;
   }
