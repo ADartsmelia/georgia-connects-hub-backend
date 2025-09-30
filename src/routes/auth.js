@@ -102,7 +102,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-// Register - Only collect minimal data, don't create user yet
+// Register - Create user directly without OTP verification (OTP temporarily disabled)
 router.post(
   "/register",
   validate(registerSchema),
@@ -118,6 +118,58 @@ router.post(
       throw new ConflictError("User with this email already exists");
     }
 
+    // Create user directly without OTP verification
+    try {
+      const user = await User.create({
+        email: email.toLowerCase(),
+        password,
+        firstName: "", // Will be set during profile completion
+        lastName: "", // Will be set during profile completion
+        isEmailVerified: true, // Skip email verification for now
+        lastLogin: new Date(),
+        lastActivityDate: new Date(),
+      });
+
+      // Generate tokens immediately
+      const token = generateToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      // Save refresh token
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      logger.info("User registered successfully without OTP", {
+        userId: user.id,
+        email: user.email,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isEmailVerified: user.isEmailVerified,
+            createdAt: user.createdAt,
+          },
+          token,
+          refreshToken,
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to create user", {
+        email: email.toLowerCase(),
+        error: error.message,
+      });
+
+      throw new Error("Failed to create user. Please try again.");
+    }
+
+    // OTP REGISTRATION CODE (COMMENTED OUT FOR NOW)
+    /*
     // Store registration data temporarily (in production, you might want to use Redis)
     // For now, we'll just send OTP and store data in the OTP record
     try {
@@ -147,6 +199,7 @@ router.post(
 
       throw new Error("Failed to send verification code. Please try again.");
     }
+    */
   })
 );
 
@@ -177,13 +230,61 @@ router.post(
       throw new AuthenticationError("Account is deactivated");
     }
 
-    // Check if email is verified
-    if (!user.isEmailVerified) {
-      throw new AuthenticationError(
-        "Please verify your email before logging in"
-      );
+    // Skip email verification check for now (OTP temporarily disabled)
+    // if (!user.isEmailVerified) {
+    //   throw new AuthenticationError(
+    //     "Please verify your email before logging in"
+    //   );
+    // }
+
+    // Authenticate user directly without OTP verification
+    try {
+      // Update last login and activity
+      user.lastLogin = new Date();
+      user.lastActivityDate = new Date();
+      await user.save();
+
+      // Generate tokens immediately
+      const token = generateToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      // Save refresh token
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      logger.info("User logged in successfully without OTP", {
+        userId: user.id,
+        email: user.email,
+      });
+
+      res.json({
+        success: true,
+        message: "Login successful",
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isEmailVerified: user.isEmailVerified,
+            createdAt: user.createdAt,
+          },
+          token,
+          refreshToken,
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to authenticate user", {
+        userId: user.id,
+        email: user.email,
+        error: error.message,
+      });
+
+      throw new AuthenticationError("Authentication failed. Please try again.");
     }
 
+    // OTP LOGIN CODE (COMMENTED OUT FOR NOW)
+    /*
     // Send OTP for verification instead of returning tokens immediately
     try {
       const result = await OTPService.sendEmailVerificationOTP(email);
@@ -212,6 +313,7 @@ router.post(
         "Failed to send verification code. Please try again."
       );
     }
+    */
   })
 );
 
