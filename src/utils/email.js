@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import handlebars from "handlebars";
 import fs from "fs";
 import path from "path";
@@ -8,18 +8,8 @@ import { logger } from "./logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: process.env.SMTP_PORT || 587,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-};
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Email templates
 const templates = {
@@ -344,8 +334,6 @@ export const sendEmail = async ({
   attachments = [],
 }) => {
   try {
-    const transporter = createTransporter();
-
     // Get template
     const emailTemplate = templates[template];
     if (!emailTemplate) {
@@ -356,30 +344,55 @@ export const sendEmail = async ({
     const compiledTemplate = handlebars.compile(emailTemplate.template);
     const html = compiledTemplate(data);
 
-    // Email options
-    const mailOptions = {
-      from: `${process.env.FROM_NAME || "Georgia Connects Hub"} <${
-        process.env.FROM_EMAIL || process.env.SMTP_USER
-      }>`,
+    // Prepare attachments for SendGrid
+    const sendGridAttachments = attachments.map(attachment => {
+      if (attachment.path) {
+        // Read file from path
+        const fileContent = fs.readFileSync(attachment.path);
+        return {
+          content: fileContent.toString('base64'),
+          filename: attachment.filename,
+          type: attachment.contentType || 'image/png',
+          disposition: 'attachment',
+          contentId: attachment.cid
+        };
+      } else {
+        // Use buffer content
+        return {
+          content: attachment.content.toString('base64'),
+          filename: attachment.filename,
+          type: attachment.contentType || 'image/png',
+          disposition: 'attachment',
+          contentId: attachment.cid
+        };
+      }
+    });
+
+    // SendGrid message
+    const msg = {
       to: email,
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER,
+        name: process.env.SENDGRID_FROM_NAME || "Networking Georgia"
+      },
       subject: emailTemplate.subject || subject,
       html: html,
-      attachments: attachments,
+      attachments: sendGridAttachments
     };
 
-    // Send email
-    const info = await transporter.sendMail(mailOptions);
+    // Send email via SendGrid
+    const response = await sgMail.send(msg);
 
-    logger.info("Email sent successfully", {
+    logger.info("Email sent successfully via SendGrid", {
       to: email,
-      subject: mailOptions.subject,
-      messageId: info.messageId,
+      subject: msg.subject,
+      messageId: response[0].headers['x-message-id'],
       attachments: attachments.length,
     });
 
-    return info;
+    return response[0];
   } catch (error) {
-    logger.error("Failed to send email", {
+    logger.error("Failed to send email via SendGrid", {
       to: email,
       template,
       error: error.message,
@@ -407,12 +420,15 @@ export const sendBulkEmail = async (emails, template, data = {}) => {
 // Test email configuration
 export const testEmailConfig = async () => {
   try {
-    const transporter = createTransporter();
-    await transporter.verify();
-    logger.info("Email configuration is valid");
+    // Test SendGrid API key
+    if (!process.env.SENDGRID_API_KEY) {
+      throw new Error("SENDGRID_API_KEY is not configured");
+    }
+    
+    logger.info("SendGrid configuration is valid");
     return true;
   } catch (error) {
-    logger.error("Email configuration test failed:", error);
+    logger.error("SendGrid configuration test failed:", error);
     return false;
   }
 };
