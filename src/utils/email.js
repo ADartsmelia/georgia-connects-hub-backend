@@ -231,7 +231,7 @@ const templates = {
           </div>
           <div class="content">
             <!-- Simple Header -->
-            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
+            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 80px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
               🎟️ Networking Georgia 2025
             </div>
             
@@ -280,9 +280,6 @@ const templates = {
             </div>
           </div>
           <div class="footer">
-            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
-              NG
-            </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>

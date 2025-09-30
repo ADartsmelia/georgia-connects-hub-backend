@@ -380,23 +380,13 @@ router.post(
         isDayPass: passType === "day_pass",
       };
 
-      // Prepare attachment
+      // Prepare QR code attachment only
       const attachments = [
         {
           filename: `networking-georgia-qr-${code}.png`,
           content: qrCodeBuffer,
           contentType: "image/png",
           cid: "qr-code-image",
-        },
-        {
-          filename: "banner.png",
-          path: path.join(__dirname, "../../email-assets/banner.png"),
-          cid: "banner-image",
-        },
-        {
-          filename: "logo.png",
-          path: path.join(__dirname, "../../email-assets/logo.png"),
-          cid: "main-logo",
         },
       ];
 
