@@ -228,12 +228,12 @@ const templates = {
           <div class="header">
             <h1>🎟️ Networking Georgia</h1>
             <h2>Your Event Pass is Ready!</h2>
-            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v5 (Spaces)</p>
+            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v6 (Spaces Assets)</p>
           </div>
           <div class="content">
-            <!-- Simple Header -->
-            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 80px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
-              🎟️ Networking Georgia 2025
+            <!-- Banner Image -->
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/banner.png" alt="Networking Georgia Banner" style="max-width: 100%; height: auto; border-radius: 8px;">
             </div>
             
             <div class="georgian-text">
@@ -283,6 +283,9 @@ const templates = {
             </div>
           </div>
           <div class="footer">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/logo.png" alt="Networking Georgia Logo" style="width: 120px; height: auto;">
+            </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
