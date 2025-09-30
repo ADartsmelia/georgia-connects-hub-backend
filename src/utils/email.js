@@ -361,7 +361,12 @@ export const sendEmail = async ({
         "QR code data URL length:",
         imageData["qr-code-image"].length
       );
+      logger.info("QR code data URL preview:", imageData["qr-code-image"].substring(0, 100) + "...");
     }
+    
+    // Check if HTML contains the QR code
+    const qrCodeInHTML = html.includes("data:image/png;base64,");
+    logger.info("QR code embedded in HTML:", qrCodeInHTML);
 
     // SendGrid message
     const msg = {
