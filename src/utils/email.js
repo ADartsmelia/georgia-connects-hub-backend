@@ -228,12 +228,15 @@ const templates = {
           <div class="header">
             <h1>🎟️ Networking Georgia</h1>
             <h2>Your Event Pass is Ready!</h2>
-            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v6 (Spaces Assets)</p>
+            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v7 (Anti-Spam)</p>
           </div>
           <div class="content">
             <!-- Banner Image -->
             <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/banner.png" alt="Networking Georgia Banner" style="max-width: 100%; height: auto; border-radius: 8px;">
+              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/banner.png" 
+                   alt="Networking Georgia 2025 Banner" 
+                   style="max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto;"
+                   width="600" height="auto">
             </div>
             
             <div class="georgian-text">
@@ -278,13 +281,19 @@ const templates = {
               <div style="text-align: center; margin: 20px 0;">
                 <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">QR Code:</div>
                 <div style="font-family: monospace; font-size: 14px; background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; margin-bottom: 15px;">{{qrCode}}</div>
-                <img src="{{qrCodeImage}}" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
+                <img src="{{qrCodeImage}}" 
+                     alt="QR Code for {{qrCode}}" 
+                     style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 0 auto;"
+                     width="200" height="200">
               </div>
             </div>
           </div>
           <div class="footer">
             <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/logo.png" alt="Networking Georgia Logo" style="width: 120px; height: auto;">
+              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/logo.png" 
+                   alt="Networking Georgia Logo" 
+                   style="width: 120px; height: auto; display: block; margin: 0 auto;"
+                   width="120" height="auto">
             </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
@@ -388,6 +397,21 @@ export const sendEmail = async ({
       subject: emailTemplate.subject || subject,
       html: html,
       // No attachments - images are embedded as base64 data URLs in HTML
+      attachments: attachments,
+      // Add headers to improve deliverability
+      headers: {
+        'X-Mailer': 'Networking Georgia System',
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'Normal',
+      },
+      // Add categories for tracking
+      categories: ['event-pass', 'qr-code'],
+      // Add custom args for tracking
+      customArgs: {
+        template: templateName,
+        timestamp: new Date().toISOString(),
+      },
     };
 
     // Debug logging
