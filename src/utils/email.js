@@ -311,7 +311,8 @@ export const sendEmail = async ({
     // Prepare base64 images for inline embedding in HTML
     const imageData = {};
     attachments.forEach((attachment) => {
-      if (attachment.cid === "qr-code-image") { // Only process QR code image
+      if (attachment.cid === "qr-code-image") {
+        // Only process QR code image
         try {
           let base64Content;
           if (attachment.path) {
@@ -356,6 +357,11 @@ export const sendEmail = async ({
     logger.info(
       `Compiled HTML with ${Object.keys(imageData).length} embedded images`
     );
+    logger.info("Template data keys:", Object.keys(templateData));
+    logger.info("Image data keys:", Object.keys(imageData));
+    if (imageData["qr-code-image"]) {
+      logger.info("QR code data URL length:", imageData["qr-code-image"].length);
+    }
 
     // SendGrid message
     const msg = {
