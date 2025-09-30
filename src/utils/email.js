@@ -230,10 +230,8 @@ const templates = {
             <h2>Your Event Pass is Ready!</h2>
           </div>
           <div class="content">
-            <!-- Banner Image Placeholder -->
-            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">
-              🎟️ Networking Georgia 2025
-            </div>
+            <!-- Banner Image -->
+            <img src="cid:banner-image" alt="Networking Georgia Banner" class="banner">
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -308,9 +306,7 @@ const templates = {
             </div>
           </div>
           <div class="footer">
-            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
-              NG
-            </div>
+            <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>You're receiving this email because you registered for our event.</p>
             

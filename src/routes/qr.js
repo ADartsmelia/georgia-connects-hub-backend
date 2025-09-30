@@ -388,6 +388,16 @@ router.post(
           contentType: "image/png",
           cid: "qr-code-image",
         },
+        {
+          filename: "banner.png",
+          path: path.join(__dirname, "../../email-assets/banner.png"),
+          cid: "banner-image",
+        },
+        {
+          filename: "logo.png",
+          path: path.join(__dirname, "../../email-assets/logo.png"),
+          cid: "main-logo",
+        },
       ];
 
       // Send email with QR code attachment
