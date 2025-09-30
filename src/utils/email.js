@@ -228,7 +228,7 @@ const templates = {
           <div class="header">
             <h1>🎟️ Networking Georgia</h1>
             <h2>Your Event Pass is Ready!</h2>
-            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v8 (Text Fallback)</p>
+            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v9 (Base64 Images)</p>
           </div>
           <div class="content">
             <!-- Banner Section -->
@@ -286,10 +286,10 @@ const templates = {
                 <div style="margin: 15px 0;">
                   <img src="{{qrCodeImage}}" 
                        alt="QR Code: {{qrCode}}" 
-                       style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 0 auto;"
+                       style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 0 auto; background: white;"
                        width="200" height="200">
                   <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                    If the QR code image doesn't display, use the code above: <strong>{{qrCode}}</strong>
+                    QR Code: <strong>{{qrCode}}</strong> (use this code if image doesn't display)
                   </p>
                 </div>
               </div>

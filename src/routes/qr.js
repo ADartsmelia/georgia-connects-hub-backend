@@ -359,10 +359,10 @@ router.post(
         status: "active",
       });
 
-      // Generate QR code as buffer for Spaces upload
-      const qrCodeBuffer = await QRCode.toBuffer(code, {
+      // Generate QR code as base64 data URL for direct HTML embedding
+      const qrCodeDataURL = await QRCode.toDataURL(code, {
         type: "png",
-        width: 300, // Larger size since it's hosted externally
+        width: 200, // Good size for email
         margin: 2,
         color: {
           dark: "#000000",
@@ -370,16 +370,13 @@ router.post(
         },
       });
 
-      // Upload QR code to DigitalOcean Spaces
-      const qrCodeUrl = await uploadQRCodeToSpaces(qrCodeBuffer, code);
-
-      // Prepare email data with Spaces QR code URL
+      // Prepare email data with embedded QR code
       const emailData = {
         recipientName:
           recipientName ||
           (user ? `${user.firstName} ${user.lastName}` : "Guest"),
         qrCode: code,
-        qrCodeImage: qrCodeUrl, // DigitalOcean Spaces URL
+        qrCodeImage: qrCodeDataURL, // Base64 data URL for direct embedding
         passType: passType,
         passTypeClass: passType === "day_pass" ? "day-pass" : "full-pass",
         isDayPass: passType === "day_pass",
