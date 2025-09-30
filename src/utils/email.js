@@ -310,12 +310,22 @@ export const sendEmail = async ({
       if (attachment.cid) {
         let base64Content;
         if (attachment.path) {
+          // Check if file exists
+          if (!fs.existsSync(attachment.path)) {
+            logger.error(`Image file not found: ${attachment.path}`);
+            return;
+          }
           const fileContent = fs.readFileSync(attachment.path);
           base64Content = fileContent.toString("base64");
+          logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
         } else {
           base64Content = attachment.content.toString("base64");
+          logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
         }
-        imageData[attachment.cid] = `data:${attachment.contentType || "image/png"};base64,${base64Content}`;
+        imageData[attachment.cid] = `data:${
+          attachment.contentType || "image/png"
+        };base64,${base64Content}`;
+        logger.info(`Created data URL for ${attachment.cid}, length: ${imageData[attachment.cid].length}`);
       }
     });
 
@@ -324,9 +334,14 @@ export const sendEmail = async ({
     const compiledTemplate = handlebars.compile(emailTemplate.template);
     const html = compiledTemplate(templateData);
 
+    // Debug: Log template data and HTML snippet
+    logger.info("Template data keys:", Object.keys(templateData));
+    logger.info("Image data keys:", Object.keys(imageData));
+    logger.info("HTML snippet (first 500 chars):", html.substring(0, 500));
+
     // Only include non-inline attachments
     const sendGridAttachments = attachments
-      .filter(attachment => !attachment.cid) // Only non-inline attachments
+      .filter((attachment) => !attachment.cid) // Only non-inline attachments
       .map((attachment) => {
         if (attachment.path) {
           const fileContent = fs.readFileSync(attachment.path);
