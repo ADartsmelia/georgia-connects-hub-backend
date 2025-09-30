@@ -275,6 +275,8 @@ const templates = {
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
               <div style="text-align: center; margin: 20px 0;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">QR Code:</div>
+                <div style="font-family: monospace; font-size: 14px; background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; margin-bottom: 15px;">{{qrCode}}</div>
                 <img src="{{qr-code-image}}" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
               </div>
             </div>
@@ -361,9 +363,12 @@ export const sendEmail = async ({
         "QR code data URL length:",
         imageData["qr-code-image"].length
       );
-      logger.info("QR code data URL preview:", imageData["qr-code-image"].substring(0, 100) + "...");
+      logger.info(
+        "QR code data URL preview:",
+        imageData["qr-code-image"].substring(0, 100) + "..."
+      );
     }
-    
+
     // Check if HTML contains the QR code
     const qrCodeInHTML = html.includes("data:image/png;base64,");
     logger.info("QR code embedded in HTML:", qrCodeInHTML);
