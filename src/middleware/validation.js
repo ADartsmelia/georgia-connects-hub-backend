@@ -608,8 +608,8 @@ export const resetPasswordWithOTPSchema = Joi.object({
     "string.email": "Please provide a valid email address",
     "any.required": "Email is required",
   }),
-  otp: Joi.string().length(6).required().messages({
-    "string.length": "OTP must be 6 characters",
+  otp: Joi.string().length(4).required().messages({
+    "string.length": "OTP must be 4 characters",
     "any.required": "OTP is required",
   }),
   newPassword: Joi.string().min(8).required().messages({
