@@ -268,55 +268,19 @@ const templates = {
               <p>პატივისცემით,</p>
             </div>
             
-            <div class="pass-info">
-              <h3>📋 Your QR Code Details</h3>
-              <p><strong>Pass Type:</strong> 
-                <span class="pass-type {{passTypeClass}}">
-                  {{#if isDayPass}}🎫 Day Pass{{else}}🎟️ Full Event Pass{{/if}}
-                </span>
-              </p>
-              <p><strong>QR Code:</strong> {{qrCode}}</p>
-              <p><strong>Status:</strong> Active and ready to use</p>
-            </div>
-
             <div class="qr-section">
-              <h3>📱 Your QR Code</h3>
-              <p>Your personalized QR code is attached to this email. Please save it to your phone or print it out.</p>
-              <p><strong>Important:</strong> This QR code is unique to you and will be scanned at the event entrance.</p>
-            </div>
-
-            <div class="instructions">
-              <h3>📝 How to Use Your Pass</h3>
-              <ol>
-                <li><strong>Save the QR Code:</strong> Download the attached QR code image to your phone</li>
-                <li><strong>Bring Your Phone:</strong> Have the QR code ready on your device when you arrive</li>
-                <li><strong>Event Check-in:</strong> Present your QR code at the registration desk</li>
-                <li><strong>Enjoy the Event:</strong> Once scanned, you'll receive your event materials and access</li>
-              </ol>
-            </div>
-
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-              <h3>⚠️ Important Reminders</h3>
-              <ul>
-                <li>This QR code can only be used once</li>
-                <li>Keep your QR code secure and don't share it with others</li>
-                <li>Arrive on time for the best networking experience</li>
-                <li>Bring a valid ID for verification if requested</li>
-              </ul>
+              <h3>📱 თქვენი QR კოდი</h3>
+              <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
+              <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
+              <div style="text-align: center; margin: 20px 0;">
+                <img src="cid:qr-code-image" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
+              </div>
             </div>
           </div>
           <div class="footer">
             <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
-            <p>You're receiving this email because you registered for our event.</p>
-            
-            <div class="contact-info">
-              <p><strong>Our mailing address is:</strong></p>
-              <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
-              
-              <p><strong>Want to change how you receive these emails?</strong></p>
-              <p>You can update your preferences or unsubscribe</p>
-            </div>
+            <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
         </div>
       </body>
