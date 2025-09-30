@@ -228,15 +228,13 @@ const templates = {
           <div class="header">
             <h1>🎟️ Networking Georgia</h1>
             <h2>Your Event Pass is Ready!</h2>
-            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v7 (Anti-Spam)</p>
+            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v8 (Text Fallback)</p>
           </div>
           <div class="content">
-            <!-- Banner Image -->
-            <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://networking-georgia.fra1.digitaloceanspaces.com/email-assets/banner.png" 
-                   alt="Networking Georgia 2025 Banner" 
-                   style="max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto;"
-                   width="600" height="auto">
+            <!-- Banner Section -->
+            <div style="text-align: center; margin-bottom: 20px; background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 8px; color: white;">
+              <h2 style="margin: 0; font-size: 24px; font-weight: bold;">🎟️ Networking Georgia 2025</h2>
+              <p style="margin: 10px 0 0 0; font-size: 16px;">Your Event Pass is Ready!</p>
             </div>
             
             <div class="georgian-text">
@@ -278,13 +276,22 @@ const templates = {
               <h3>📱 თქვენი QR კოდი</h3>
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
-              <div style="text-align: center; margin: 20px 0;">
+              
+              <!-- QR Code Section with Fallback -->
+              <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
                 <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">QR Code:</div>
-                <div style="font-family: monospace; font-size: 14px; background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; margin-bottom: 15px;">{{qrCode}}</div>
-                <img src="{{qrCodeImage}}" 
-                     alt="QR Code for {{qrCode}}" 
-                     style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 0 auto;"
-                     width="200" height="200">
+                <div style="font-family: monospace; font-size: 14px; background: #ffffff; padding: 15px; border-radius: 4px; word-break: break-all; margin-bottom: 15px; border: 2px solid #ddd;">{{qrCode}}</div>
+                
+                <!-- QR Code Image with Fallback -->
+                <div style="margin: 15px 0;">
+                  <img src="{{qrCodeImage}}" 
+                       alt="QR Code: {{qrCode}}" 
+                       style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 0 auto;"
+                       width="200" height="200">
+                  <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    If the QR code image doesn't display, use the code above: <strong>{{qrCode}}</strong>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -396,21 +403,55 @@ export const sendEmail = async ({
       },
       subject: emailTemplate.subject || subject,
       html: html,
+      // Add text version for better deliverability
+      text: `Networking Georgia 2025 - Your Event Pass
+
+Hello ${data.recipientName || 'Guest'},
+
+Thank you for registering for Networking Georgia 2025! Your event pass is ready.
+
+Your QR Code: ${data.qrCode}
+Pass Type: ${data.passType === 'day_pass' ? 'Day Pass' : 'Full Pass'}
+
+Important Information:
+- This QR code is unique and required for event entry
+- Please save it on your phone or print it
+- Registration link: https://app.networkinggeorgia.com/
+
+Event Details:
+- Date: [Event Date]
+- Location: [Event Location]
+- Transport: Bus departs at 08:30 from Expo Georgia parking
+- Contact: 595 171 771 for transport delays
+
+If you have any questions, please contact us.
+
+Best regards,
+Networking Georgia Team
+
+© 2025 Network Georgia. All rights reserved.
+60 Petre Kavtaradze Street, Tbilisi, Georgia`,
       // No attachments - images are embedded as base64 data URLs in HTML
       attachments: attachments,
       // Add headers to improve deliverability
       headers: {
-        "X-Mailer": "Networking Georgia System",
+        "X-Mailer": "Networking Georgia Event System",
         "X-Priority": "3",
         "X-MSMail-Priority": "Normal",
-        Importance: "Normal",
+        "Importance": "Normal",
+        "X-SG-EID": "NetworkingGeorgia2025",
+        "X-SG-Category": "event-notification",
+        "List-Unsubscribe": "<mailto:unsubscribe@networkinggeorgia.com>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
       // Add categories for tracking
-      categories: ["event-pass", "qr-code"],
+      categories: ["event-pass", "qr-code", "networking-georgia-2025"],
       // Add custom args for tracking
       customArgs: {
         template: template,
         timestamp: new Date().toISOString(),
+        event: "networking-georgia-2025",
+        type: "qr-pass",
       },
     };
 
