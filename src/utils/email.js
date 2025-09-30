@@ -309,35 +309,48 @@ export const sendEmail = async ({
     const html = compiledTemplate(data);
 
     // Prepare SendGrid attachments with proper inline content_id
-    const sendGridAttachments = attachments.map((attachment) => {
-      if (attachment.path) {
-        // Check if file exists
-        if (!fs.existsSync(attachment.path)) {
-          logger.error(`Image file not found: ${attachment.path}`);
+    const sendGridAttachments = attachments
+      .map((attachment) => {
+        try {
+          if (attachment.path) {
+            // Check if file exists
+            if (!fs.existsSync(attachment.path)) {
+              logger.error(`Image file not found: ${attachment.path}`);
+              return null;
+            }
+            const fileContent = fs.readFileSync(attachment.path);
+            logger.info(
+              `Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`
+            );
+            return {
+              content: fileContent.toString("base64"),
+              filename: attachment.filename,
+              type: attachment.contentType || "image/png",
+              disposition: attachment.cid ? "inline" : "attachment",
+              content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+            };
+          } else {
+            logger.info(
+              `Loaded image from buffer, size: ${attachment.content.length} bytes`
+            );
+            return {
+              content: attachment.content.toString("base64"),
+              filename: attachment.filename,
+              type: attachment.contentType || "image/png",
+              disposition: attachment.cid ? "inline" : "attachment",
+              content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+            };
+          }
+        } catch (error) {
+          logger.error(`Error processing attachment ${attachment.filename}:`, error.message);
           return null;
         }
-        const fileContent = fs.readFileSync(attachment.path);
-        logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
-        return {
-          content: fileContent.toString("base64"),
-          filename: attachment.filename,
-          type: attachment.contentType || "image/png",
-          disposition: attachment.cid ? "inline" : "attachment",
-          content_id: attachment.cid, // Use content_id for SendGrid inline attachments
-        };
-      } else {
-        logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
-        return {
-          content: attachment.content.toString("base64"),
-          filename: attachment.filename,
-          type: attachment.contentType || "image/png",
-          disposition: attachment.cid ? "inline" : "attachment",
-          content_id: attachment.cid, // Use content_id for SendGrid inline attachments
-        };
-      }
-    }).filter(Boolean); // Remove null entries
+      })
+      .filter(Boolean); // Remove null entries
 
-    logger.info(`Prepared ${sendGridAttachments.length} attachments for SendGrid`);
+    logger.info(
+      `Prepared ${sendGridAttachments.length} attachments for SendGrid`
+    );
 
     // SendGrid message
     const msg = {
