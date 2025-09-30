@@ -400,16 +400,16 @@ export const sendEmail = async ({
       attachments: attachments,
       // Add headers to improve deliverability
       headers: {
-        'X-Mailer': 'Networking Georgia System',
-        'X-Priority': '3',
-        'X-MSMail-Priority': 'Normal',
-        'Importance': 'Normal',
+        "X-Mailer": "Networking Georgia System",
+        "X-Priority": "3",
+        "X-MSMail-Priority": "Normal",
+        Importance: "Normal",
       },
       // Add categories for tracking
-      categories: ['event-pass', 'qr-code'],
+      categories: ["event-pass", "qr-code"],
       // Add custom args for tracking
       customArgs: {
-        template: templateName,
+        template: template,
         timestamp: new Date().toISOString(),
       },
     };
