@@ -230,8 +230,10 @@ const templates = {
             <h2>Your Event Pass is Ready!</h2>
           </div>
           <div class="content">
-            <!-- Banner Image -->
-            <img src="cid:banner-image" alt="Networking Georgia Banner" class="banner">
+            <!-- Banner Image Placeholder -->
+            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
+              🎟️ Networking Georgia 2025
+            </div>
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -272,13 +274,17 @@ const templates = {
               <h3>📱 თქვენი QR კოდი</h3>
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
-              <div style="text-align: center; margin: 20px 0;">
-                <img src="cid:qr-code-image" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
+              <div style="text-align: center; margin: 20px 0; padding: 20px; background: white; border: 2px solid #ddd; border-radius: 8px;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">📱 Your QR Code</div>
+                <div style="font-family: monospace; font-size: 16px; background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">{{qrCode}}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">Please save this code or take a screenshot</div>
               </div>
             </div>
           </div>
           <div class="footer">
-            <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
+            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
+              NG
+            </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
@@ -328,6 +334,7 @@ export const sendEmail = async ({
               type: attachment.contentType || "image/png",
               disposition: attachment.cid ? "inline" : "attachment",
               content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+              cid: attachment.cid, // Also include cid for compatibility
             };
           } else {
             logger.info(
@@ -339,10 +346,14 @@ export const sendEmail = async ({
               type: attachment.contentType || "image/png",
               disposition: attachment.cid ? "inline" : "attachment",
               content_id: attachment.cid, // Use content_id for SendGrid inline attachments
+              cid: attachment.cid, // Also include cid for compatibility
             };
           }
         } catch (error) {
-          logger.error(`Error processing attachment ${attachment.filename}:`, error.message);
+          logger.error(
+            `Error processing attachment ${attachment.filename}:`,
+            error.message
+          );
           return null;
         }
       })
@@ -362,8 +373,7 @@ export const sendEmail = async ({
       },
       subject: emailTemplate.subject || subject,
       html: html,
-      attachments:
-        sendGridAttachments.length > 0 ? sendGridAttachments : undefined,
+      // No attachments - using text-based design instead of images
     };
 
     // Debug logging
