@@ -35,7 +35,7 @@ const upload = multer({
  */
 router.post("/generate", async (req, res) => {
   try {
-    const { userEmail, passType = "day_pass" } = req.body;
+    const { userEmail, firstName, lastName, passType = "day_pass" } = req.body;
 
     // Validate passType
     if (passType && !["day_pass", "full_pass"].includes(passType)) {
@@ -62,6 +62,8 @@ router.post("/generate", async (req, res) => {
       code,
       passType,
       userId,
+      firstName: firstName || null,
+      lastName: lastName || null,
       status: "active",
     });
 
@@ -73,6 +75,8 @@ router.post("/generate", async (req, res) => {
         code: qrCode.code,
         passType: qrCode.passType,
         userId: qrCode.userId,
+        firstName: qrCode.firstName,
+        lastName: qrCode.lastName,
         status: qrCode.status,
         createdAt: qrCode.createdAt,
       },
@@ -143,6 +147,11 @@ router.post("/scan", authenticate, isAdmin, async (req, res) => {
         message: "⚠️ Already Used - This QR code has already been scanned",
         details: `Scanned on ${scannedDate} by ${scannerName}`,
         data: {
+          id: qrCode.id,
+          code: qrCode.code,
+          passType: qrCode.passType,
+          firstName: qrCode.firstName,
+          lastName: qrCode.lastName,
           scannedAt: qrCode.scannedAt,
           scannedBy: qrCode.scannedBy,
           scanner: qrCode.scanner,
@@ -176,7 +185,10 @@ router.post("/scan", authenticate, isAdmin, async (req, res) => {
       data: {
         id: qrCode.id,
         code: qrCode.code,
+        passType: qrCode.passType,
         userId: qrCode.userId,
+        firstName: qrCode.firstName,
+        lastName: qrCode.lastName,
         user: qrCode.user,
         status: qrCode.status,
         scannedAt: qrCode.scannedAt,

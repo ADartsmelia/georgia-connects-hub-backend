@@ -26,7 +26,12 @@ const s3Client = new S3Client({
  * @param {string} contentType - MIME type
  * @returns {Promise<string>} - Public URL of uploaded file
  */
-export async function uploadFileToSpaces(fileBuffer, filename, folder = "uploads", contentType = "application/octet-stream") {
+export async function uploadFileToSpaces(
+  fileBuffer,
+  filename,
+  folder = "uploads",
+  contentType = "application/octet-stream"
+) {
   try {
     const key = `${folder}/${filename}`;
 
@@ -57,7 +62,12 @@ export async function uploadFileToSpaces(fileBuffer, filename, folder = "uploads
  * @returns {Promise<string>} - Public URL of uploaded image
  */
 export async function uploadQRCodeToSpaces(qrCodeBuffer, qrCode) {
-  return uploadFileToSpaces(qrCodeBuffer, `${qrCode}.png`, "qr-codes", "image/png");
+  return uploadFileToSpaces(
+    qrCodeBuffer,
+    `${qrCode}.png`,
+    "qr-codes",
+    "image/png"
+  );
 }
 
 /**

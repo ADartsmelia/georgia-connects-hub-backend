@@ -24,7 +24,12 @@ const router = express.Router();
 // Helper function to upload post image to DigitalOcean Spaces
 const uploadPostImageToSpaces = async (fileBuffer, filename, contentType) => {
   try {
-    const s3Url = await uploadFileToSpaces(fileBuffer, filename, "posts", contentType);
+    const s3Url = await uploadFileToSpaces(
+      fileBuffer,
+      filename,
+      "posts",
+      contentType
+    );
     return s3Url;
   } catch (error) {
     logger.error("Error uploading post image to Spaces:", error);
@@ -184,14 +189,20 @@ router.post(
       try {
         // Generate unique filename for Spaces
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const filename = `post-${uniqueSuffix}${path.extname(imageFile.originalname)}`;
-        
+        const filename = `post-${uniqueSuffix}${path.extname(
+          imageFile.originalname
+        )}`;
+
         // Upload image to DigitalOcean Spaces
-        const s3Url = await uploadPostImageToSpaces(imageFile.buffer, filename, imageFile.mimetype);
-        
+        const s3Url = await uploadPostImageToSpaces(
+          imageFile.buffer,
+          filename,
+          imageFile.mimetype
+        );
+
         postData.mediaUrl = s3Url;
         postData.mediaType = imageFile.mimetype;
-        
+
         logger.info(`Post image uploaded to Spaces: ${s3Url}`);
       } catch (error) {
         logger.error("Failed to upload post image to Spaces:", error);

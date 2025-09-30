@@ -33,6 +33,16 @@ const QRCode = sequelize.define(
       onDelete: "SET NULL",
       onUpdate: "CASCADE",
     },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "First name of the attendee",
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "Last name of the attendee",
+    },
     status: {
       type: DataTypes.ENUM("active", "used", "expired"),
       defaultValue: "active",
