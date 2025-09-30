@@ -358,37 +358,31 @@ router.post(
         status: "active",
       });
 
-      // Generate QR code as image buffer (smaller size for email embedding)
-      const qrCodeBuffer = await QRCode.toBuffer(code, {
+      // Generate QR code as base64 data URL (very small size for email embedding)
+      const qrCodeDataURL = await QRCode.toDataURL(code, {
         type: "png",
-        width: 200, // Reduced from 400 to 200
-        margin: 1, // Reduced margin
+        width: 150, // Very small size to prevent SendGrid attachment conversion
+        margin: 1,
         color: {
           dark: "#000000",
           light: "#FFFFFF",
         },
       });
 
-      // Prepare email data
+      // Prepare email data with embedded QR code
       const emailData = {
         recipientName:
           recipientName ||
           (user ? `${user.firstName} ${user.lastName}` : "Guest"),
         qrCode: code,
+        qrCodeImage: qrCodeDataURL, // Base64 data URL for direct embedding
         passType: passType,
         passTypeClass: passType === "day_pass" ? "day-pass" : "full-pass",
         isDayPass: passType === "day_pass",
       };
 
-      // Prepare QR code attachment only
-      const attachments = [
-        {
-          filename: `networking-georgia-qr-${code}.png`,
-          content: qrCodeBuffer,
-          contentType: "image/png",
-          cid: "qr-code-image",
-        },
-      ];
+      // No attachments - QR code is embedded directly in HTML
+      const attachments = [];
 
       // Send email with QR code attachment
       await sendEmail({
