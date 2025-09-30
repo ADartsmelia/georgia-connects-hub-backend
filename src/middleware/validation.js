@@ -668,6 +668,27 @@ export const resendOTPSchema = Joi.object({
   }),
 });
 
+// QR Code Email validation schema
+export const generateAndEmailQRSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+  passType: Joi.string()
+    .valid("day_pass", "full_pass")
+    .default("day_pass")
+    .messages({
+      "any.only": "Pass type must be either 'day_pass' or 'full_pass'",
+    }),
+  userEmail: Joi.string().email().optional().messages({
+    "string.email": "User email must be a valid email address",
+  }),
+  recipientName: Joi.string().min(1).max(100).optional().messages({
+    "string.min": "Recipient name must be at least 1 character",
+    "string.max": "Recipient name cannot exceed 100 characters",
+  }),
+});
+
 export default {
   validate,
   validateQuery,
@@ -695,4 +716,5 @@ export default {
   createBadgeSchema,
   updateBadgeSchema,
   assignBadgeSchema,
+  generateAndEmailQRSchema,
 };

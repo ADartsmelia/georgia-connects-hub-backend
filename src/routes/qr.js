@@ -1,8 +1,20 @@
 import express from "express";
 import crypto from "crypto";
-import QRCode from "../models/QRCode.js";
+import QRCode from "qrcode";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import QRCodeModel from "../models/QRCode.js";
 import { User } from "../models/index.js";
 import { authenticate, isAdmin } from "../middleware/auth.js";
+import {
+  validate,
+  generateAndEmailQRSchema,
+} from "../middleware/validation.js";
+import { sendEmail } from "../utils/email.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -36,7 +48,7 @@ router.post("/generate", async (req, res) => {
     }
 
     // Create QR code record
-    const qrCode = await QRCode.create({
+    const qrCode = await QRCodeModel.create({
       code,
       passType,
       userId,
@@ -83,7 +95,7 @@ router.post("/scan", authenticate, isAdmin, async (req, res) => {
     }
 
     // Find QR code
-    const qrCode = await QRCode.findOne({
+    const qrCode = await QRCodeModel.findOne({
       where: { code },
       include: [
         {
@@ -186,7 +198,7 @@ router.get("/all", authenticate, isAdmin, async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    const { count, rows: qrCodes } = await QRCode.findAndCountAll({
+    const { count, rows: qrCodes } = await QRCodeModel.findAndCountAll({
       where,
       include: [
         {
@@ -236,7 +248,7 @@ router.get("/:id", authenticate, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const qrCode = await QRCode.findByPk(id, {
+    const qrCode = await QRCodeModel.findByPk(id, {
       include: [
         {
           model: User,
@@ -280,10 +292,10 @@ router.get("/:id", authenticate, isAdmin, async (req, res) => {
 router.get("/stats/overview", authenticate, isAdmin, async (req, res) => {
   try {
     const [total, active, used, expired] = await Promise.all([
-      QRCode.count(),
-      QRCode.count({ where: { status: "active" } }),
-      QRCode.count({ where: { status: "used" } }),
-      QRCode.count({ where: { status: "expired" } }),
+      QRCodeModel.count(),
+      QRCodeModel.count({ where: { status: "active" } }),
+      QRCodeModel.count({ where: { status: "used" } }),
+      QRCodeModel.count({ where: { status: "expired" } }),
     ]);
 
     return res.status(200).json({
@@ -305,5 +317,127 @@ router.get("/stats/overview", authenticate, isAdmin, async (req, res) => {
     });
   }
 });
+
+/**
+ * Generate QR code and send via email (Admin only)
+ * POST /api/v1/qr/generate-and-email
+ * Body: { email: string, passType?: 'day_pass' | 'full_pass', userEmail?: string, recipientName?: string }
+ */
+router.post(
+  "/generate-and-email",
+  authenticate,
+  isAdmin,
+  validate(generateAndEmailQRSchema),
+  async (req, res) => {
+    try {
+      const {
+        email,
+        passType = "day_pass",
+        userEmail,
+        recipientName,
+      } = req.body;
+
+      // Generate unique code
+      const code = crypto.randomBytes(16).toString("hex");
+
+      // Find user if email provided
+      let userId = null;
+      let user = null;
+      if (userEmail) {
+        user = await User.findOne({ where: { email: userEmail } });
+        if (user) {
+          userId = user.id;
+        }
+      }
+
+      // Create QR code record
+      const qrCodeRecord = await QRCodeModel.create({
+        code,
+        passType,
+        userId,
+        status: "active",
+      });
+
+      // Generate QR code as image buffer
+      const qrCodeBuffer = await QRCode.toBuffer(code, {
+        type: "png",
+        width: 400,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+
+      // Prepare email data
+      const emailData = {
+        recipientName:
+          recipientName ||
+          (user ? `${user.firstName} ${user.lastName}` : "Guest"),
+        qrCode: code,
+        passType: passType,
+        passTypeClass: passType === "day_pass" ? "day-pass" : "full-pass",
+        isDayPass: passType === "day_pass",
+      };
+
+      // Prepare attachment
+      const attachments = [
+        {
+          filename: `networking-georgia-qr-${code}.png`,
+          content: qrCodeBuffer,
+          contentType: "image/png",
+          cid: "qr-code-image",
+        },
+        {
+          filename: "banner.png",
+          path: path.join(
+            __dirname,
+            "../../../georgia-connects-hub/src/assets/Main.png"
+          ),
+          cid: "banner-image",
+        },
+        {
+          filename: "main-logo.png",
+          path: path.join(
+            __dirname,
+            "../../../georgia-connects-hub/src/assets/Main.png"
+          ),
+          cid: "main-logo",
+        },
+      ];
+
+      // Send email with QR code attachment
+      await sendEmail({
+        email,
+        template: "qrCodePass",
+        data: emailData,
+        attachments,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "QR code generated and sent via email successfully",
+        data: {
+          id: qrCodeRecord.id,
+          code: qrCodeRecord.code,
+          passType: qrCodeRecord.passType,
+          userId: qrCodeRecord.userId,
+          status: qrCodeRecord.status,
+          createdAt: qrCodeRecord.createdAt,
+          emailSent: true,
+          recipientEmail: email,
+          recipientName: emailData.recipientName,
+        },
+      });
+    } catch (error) {
+      console.error("Error generating and emailing QR code:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to generate and email QR code",
+        error: error.message,
+      });
+    }
+  }
+);
 
 export default router;
