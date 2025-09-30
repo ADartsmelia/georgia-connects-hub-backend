@@ -230,8 +230,10 @@ const templates = {
             <h2>Your Event Pass is Ready!</h2>
           </div>
           <div class="content">
-            <!-- Banner Image -->
-            <img src="{{banner-image}}" alt="Networking Georgia Banner" class="banner">
+            <!-- Simple Header -->
+            <div class="banner" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; border-radius: 8px; margin-bottom: 20px;">
+              🎟️ Networking Georgia 2025
+            </div>
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -278,7 +280,9 @@ const templates = {
             </div>
           </div>
           <div class="footer">
-            <img src="{{main-logo}}" alt="Networking Georgia Logo" class="logo">
+            <div class="logo" style="background: linear-gradient(135deg, #1e40af, #3b82f6); height: 60px; width: 120px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; margin: 20px auto; border-radius: 8px;">
+              NG
+            </div>
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
@@ -307,7 +311,7 @@ export const sendEmail = async ({
     // Prepare base64 images for inline embedding in HTML
     const imageData = {};
     attachments.forEach((attachment) => {
-      if (attachment.cid) {
+      if (attachment.cid === "qr-code-image") { // Only process QR code image
         try {
           let base64Content;
           if (attachment.path) {
@@ -318,15 +322,28 @@ export const sendEmail = async ({
             }
             const fileContent = fs.readFileSync(attachment.path);
             base64Content = fileContent.toString("base64");
-            logger.info(`Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`);
+            logger.info(
+              `Loaded image: ${attachment.path}, size: ${fileContent.length} bytes`
+            );
           } else {
             base64Content = attachment.content.toString("base64");
-            logger.info(`Loaded image from buffer, size: ${attachment.content.length} bytes`);
+            logger.info(
+              `Loaded image from buffer, size: ${attachment.content.length} bytes`
+            );
           }
-          imageData[attachment.cid] = `data:${attachment.contentType || "image/png"};base64,${base64Content}`;
-          logger.info(`Created data URL for ${attachment.cid}, length: ${imageData[attachment.cid].length}`);
+          imageData[attachment.cid] = `data:${
+            attachment.contentType || "image/png"
+          };base64,${base64Content}`;
+          logger.info(
+            `Created data URL for ${attachment.cid}, length: ${
+              imageData[attachment.cid].length
+            }`
+          );
         } catch (error) {
-          logger.error(`Error processing image ${attachment.cid}:`, error.message);
+          logger.error(
+            `Error processing image ${attachment.cid}:`,
+            error.message
+          );
         }
       }
     });
@@ -336,7 +353,9 @@ export const sendEmail = async ({
     const compiledTemplate = handlebars.compile(emailTemplate.template);
     const html = compiledTemplate(templateData);
 
-    logger.info(`Compiled HTML with ${Object.keys(imageData).length} embedded images`);
+    logger.info(
+      `Compiled HTML with ${Object.keys(imageData).length} embedded images`
+    );
 
     // SendGrid message
     const msg = {
