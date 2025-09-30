@@ -406,12 +406,12 @@ export const sendEmail = async ({
       // Add text version for better deliverability
       text: `Networking Georgia 2025 - Your Event Pass
 
-Hello ${data.recipientName || 'Guest'},
+Hello ${data.recipientName || "Guest"},
 
 Thank you for registering for Networking Georgia 2025! Your event pass is ready.
 
 Your QR Code: ${data.qrCode}
-Pass Type: ${data.passType === 'day_pass' ? 'Day Pass' : 'Full Pass'}
+Pass Type: ${data.passType === "day_pass" ? "Day Pass" : "Full Pass"}
 
 Important Information:
 - This QR code is unique and required for event entry
@@ -433,16 +433,11 @@ Networking Georgia Team
 60 Petre Kavtaradze Street, Tbilisi, Georgia`,
       // No attachments - images are embedded as base64 data URLs in HTML
       attachments: attachments,
-      // Add headers to improve deliverability
+      // Add headers to improve deliverability (SendGrid compatible)
       headers: {
         "X-Mailer": "Networking Georgia Event System",
         "X-Priority": "3",
-        "X-MSMail-Priority": "Normal",
         "Importance": "Normal",
-        "X-SG-EID": "NetworkingGeorgia2025",
-        "X-SG-Category": "event-notification",
-        "List-Unsubscribe": "<mailto:unsubscribe@networkinggeorgia.com>",
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
       // Add categories for tracking
       categories: ["event-pass", "qr-code", "networking-georgia-2025"],

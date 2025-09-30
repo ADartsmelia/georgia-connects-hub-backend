@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import QRCodeModel from "../models/QRCode.js";
 import { User } from "../models/index.js";
 import { authenticate, isAdmin } from "../middleware/auth.js";
+import multer from "multer";
 import {
   validate,
   generateAndEmailQRSchema,
@@ -18,6 +19,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 /**
  * Generate a unique QR code
@@ -413,6 +422,60 @@ router.post(
       return res.status(500).json({
         success: false,
         message: "Failed to generate and email QR code",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * Upload QR code image to S3
+ * POST /api/v1/qr/upload-to-s3
+ * Body: FormData with qrCode and image file
+ */
+router.post(
+  "/upload-to-s3",
+  authenticate,
+  isAdmin,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { qrCode } = req.body;
+      const file = req.file;
+
+      if (!qrCode) {
+        return res.status(400).json({
+          success: false,
+          message: "QR code is required",
+        });
+      }
+
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          message: "Image file is required",
+        });
+      }
+
+      // Upload to DigitalOcean Spaces
+      const s3Url = await uploadQRCodeToSpaces(file.buffer, qrCode);
+
+      // Update QR code record with S3 URL (optional - you might want to store this)
+      // await QRCodeModel.update(
+      //   { s3Url: s3Url },
+      //   { where: { code: qrCode } }
+      // );
+
+      res.json({
+        success: true,
+        message: "QR code uploaded to S3 successfully",
+        s3Url: s3Url,
+      });
+    } catch (error) {
+      console.error("Error uploading QR code to S3:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to upload QR code to S3",
         error: error.message,
       });
     }
