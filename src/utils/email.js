@@ -240,7 +240,7 @@ const templates = {
               
               <p>მოუთმენლად ველით თქვენთან შეხვედრას და გიზიარებთ ყველა საჭირო დეტალს იმისათვის, რომ თქვენი გამოცდილება Networking Georgia 2025-ზე იყოს მაქსიმალურად პროდუქტიული და საინტერესო.</p>
               
-              <p>სრულყოფილი ნეთვორქინგისთვის <a href="https://app.networkinggeorgia.com/" class="link">გთხოვთ, დარეგისტრირდეთ მოცემულ ბმულზე</a>. ეს მოგცემთ შესაძლებლობას: დარეგისტრირდეთ ვორკფებსა და სესიებზე; პირადად დაეკონტაქტოთ არსებულ კომპანიებს და განავითაროთ პარტნიორობა ღონისძიების დასრულების შემდეგაც.</p>
+              <p>სრულყოფილი ნეთვორქინგისთვის <a href="https://app.networkinggeorgia.com/" style="color: #1e40af; text-decoration: underline;">გთხოვთ, დარეგისტრირდეთ მოცემულ ბმულზე</a>. ეს მოგცემთ შესაძლებლობას: დარეგისტრირდეთ ვორკფებსა და სესიებზე; პირადად დაეკონტაქტოთ არსებულ კომპანიებს და განავითაროთ პარტნიორობა ღონისძიების დასრულების შემდეგაც.</p>
               
               <div class="important-info">
                 <h3>მნიშვნელოვანი ინფორმაცია ჩამოსვლისთვის:</h3>
@@ -256,7 +256,7 @@ const templates = {
               <h3>Agenda, რუკა და ვორქშოფები/სესიები:</h3>
               <p><strong>დღის წესრიგი და რუკა:</strong> თანდართულ ფაილებად გიზიარებთ ღონისძიების დეტალურ დღის წესრიგს და რუკას.</p>
               
-              <p><strong>ვორქშოფები და სესიები:</strong> <a href="https://app.networkinggeorgia.com/" class="link">ვორქშოფებსა და სესიებზე გთხოვთ დარეგისტრირდეთ ზემოთ მოცემული ბმულის მეშვეობით</a>.</p>
+              <p><strong>ვორქშოფები და სესიები:</strong> <a href="https://app.networkinggeorgia.com/" style="color: #1e40af; text-decoration: underline;">ვორქშოფებსა და სესიებზე გთხოვთ დარეგისტრირდეთ ზემოთ მოცემული ბმულის მეშვეობით</a>.</p>
               <p><em>გაითვალისწინეთ: ადგილები შეზღუდულია, ამიტომ მნიშვნელოვანია, წინასწარ დარეგისტრირდეთ, რათა სასურველ ვორქშოფზე ან სესიაზე მოხვდეთ.</em></p>
               
               <h3>ნეთვორქინგის შესაძლებლობები და გათამაშება</h3>
@@ -317,7 +317,7 @@ export const sendEmail = async ({
           content: fileContent.toString("base64"),
           filename: attachment.filename,
           type: attachment.contentType || "image/png",
-          disposition: "attachment",
+          disposition: attachment.cid ? "inline" : "attachment",
           contentId: attachment.cid,
         };
       } else {
@@ -326,7 +326,7 @@ export const sendEmail = async ({
           content: attachment.content.toString("base64"),
           filename: attachment.filename,
           type: attachment.contentType || "image/png",
-          disposition: "attachment",
+          disposition: attachment.cid ? "inline" : "attachment",
           contentId: attachment.cid,
         };
       }
