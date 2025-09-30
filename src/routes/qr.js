@@ -358,11 +358,11 @@ router.post(
         status: "active",
       });
 
-      // Generate QR code as image buffer
+      // Generate QR code as image buffer (smaller size for email embedding)
       const qrCodeBuffer = await QRCode.toBuffer(code, {
         type: "png",
-        width: 400,
-        margin: 2,
+        width: 200, // Reduced from 400 to 200
+        margin: 1,  // Reduced margin
         color: {
           dark: "#000000",
           light: "#FFFFFF",
