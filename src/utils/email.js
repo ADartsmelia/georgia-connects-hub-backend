@@ -231,7 +231,7 @@ const templates = {
           </div>
           <div class="content">
             <!-- Banner Image -->
-            <img src="cid:banner-image" alt="Networking Georgia Banner" class="banner">
+            <img src="{{banner-image}}" alt="Networking Georgia Banner" class="banner">
             
             <div class="georgian-text">
               <h2>მოგესალმებით,</h2>
@@ -273,12 +273,12 @@ const templates = {
               <p>თქვენი პერსონალური QR კოდი მოთავსებულია ამ ელფოსტაში. გთხოვთ, შეინახოთ იგი თქვენს ტელეფონში ან ამობეჭდოთ.</p>
               <p><strong>მნიშვნელოვანია:</strong> ეს QR კოდი უნიკალურია და გამოიყენება ღონისძიების შესასვლელზე.</p>
               <div style="text-align: center; margin: 20px 0;">
-                <img src="cid:qr-code-image" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
+                <img src="{{qr-code-image}}" alt="QR Code" style="max-width: 200px; height: auto; border: 2px solid #ddd; border-radius: 8px;">
               </div>
             </div>
           </div>
           <div class="footer">
-            <img src="cid:main-logo" alt="Networking Georgia Logo" class="logo">
+            <img src="{{main-logo}}" alt="Networking Georgia Logo" class="logo">
             <p><strong>© 2025 Network Georgia. All rights reserved.</strong></p>
             <p>60 Petre Kavtaradze Street, Tbilisi, Georgia</p>
           </div>
@@ -304,33 +304,47 @@ export const sendEmail = async ({
       throw new Error(`Email template '${template}' not found`);
     }
 
-    // Compile template
-    const compiledTemplate = handlebars.compile(emailTemplate.template);
-    const html = compiledTemplate(data);
-
-    // Prepare attachments for SendGrid
-    const sendGridAttachments = attachments.map((attachment) => {
-      if (attachment.path) {
-        // Read file from path
-        const fileContent = fs.readFileSync(attachment.path);
-        return {
-          content: fileContent.toString("base64"),
-          filename: attachment.filename,
-          type: attachment.contentType || "image/png",
-          disposition: attachment.cid ? "inline" : "attachment",
-          content_id: attachment.cid, // Changed from contentId to content_id
-        };
-      } else {
-        // Use buffer content
-        return {
-          content: attachment.content.toString("base64"),
-          filename: attachment.filename,
-          type: attachment.contentType || "image/png",
-          disposition: attachment.cid ? "inline" : "attachment",
-          content_id: attachment.cid, // Changed from contentId to content_id
-        };
+    // Prepare base64 images for inline embedding
+    const imageData = {};
+    attachments.forEach((attachment) => {
+      if (attachment.cid) {
+        let base64Content;
+        if (attachment.path) {
+          const fileContent = fs.readFileSync(attachment.path);
+          base64Content = fileContent.toString("base64");
+        } else {
+          base64Content = attachment.content.toString("base64");
+        }
+        imageData[attachment.cid] = `data:${attachment.contentType || "image/png"};base64,${base64Content}`;
       }
     });
+
+    // Compile template with image data
+    const templateData = { ...data, ...imageData };
+    const compiledTemplate = handlebars.compile(emailTemplate.template);
+    const html = compiledTemplate(templateData);
+
+    // Only include non-inline attachments
+    const sendGridAttachments = attachments
+      .filter(attachment => !attachment.cid) // Only non-inline attachments
+      .map((attachment) => {
+        if (attachment.path) {
+          const fileContent = fs.readFileSync(attachment.path);
+          return {
+            content: fileContent.toString("base64"),
+            filename: attachment.filename,
+            type: attachment.contentType || "image/png",
+            disposition: "attachment",
+          };
+        } else {
+          return {
+            content: attachment.content.toString("base64"),
+            filename: attachment.filename,
+            type: attachment.contentType || "image/png",
+            disposition: "attachment",
+          };
+        }
+      });
 
     // SendGrid message
     const msg = {
