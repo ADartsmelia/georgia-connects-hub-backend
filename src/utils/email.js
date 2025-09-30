@@ -360,7 +360,10 @@ export const sendEmail = async ({
     logger.info("Template data keys:", Object.keys(templateData));
     logger.info("Image data keys:", Object.keys(imageData));
     if (imageData["qr-code-image"]) {
-      logger.info("QR code data URL length:", imageData["qr-code-image"].length);
+      logger.info(
+        "QR code data URL length:",
+        imageData["qr-code-image"].length
+      );
     }
 
     // SendGrid message
@@ -381,7 +384,7 @@ export const sendEmail = async ({
       to: email,
       from: msg.from.email,
       subject: msg.subject,
-      attachmentsCount: sendGridAttachments.length,
+      embeddedImagesCount: Object.keys(imageData).length,
       htmlLength: html.length,
     });
 
