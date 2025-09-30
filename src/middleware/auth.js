@@ -149,6 +149,34 @@ export const requireAdmin = async (req, res, next) => {
   }
 };
 
+// Admin authorization middleware (checks isAdmin field)
+export const isAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // Check if user has isAdmin flag
+    if (!req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error("Admin authorization error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Authorization failed",
+    });
+  }
+};
+
 // Premium user authorization middleware
 export const requirePremium = async (req, res, next) => {
   try {
@@ -222,6 +250,7 @@ export default {
   authenticate,
   optionalAuth,
   requireAdmin,
+  isAdmin,
   requirePremium,
   rateLimitByUser,
 };

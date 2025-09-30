@@ -49,6 +49,7 @@ import playlistRoutes from "./routes/playlist.js";
 import notificationRoutes from "./routes/notifications.js";
 import agendaRoutes from "./routes/agenda.js";
 import adminRoutes from "./routes/admin.js";
+import qrRoutes from "./routes/qr.js";
 import otpRoutes from "./routes/otp.js";
 
 const app = express();
@@ -211,6 +212,7 @@ app.use(`/api/${API_VERSION}/playlist`, playlistRoutes);
 app.use(`/api/${API_VERSION}/notifications`, notificationRoutes);
 app.use(`/api/${API_VERSION}/agenda`, agendaRoutes);
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+app.use(`/api/${API_VERSION}/qr`, qrRoutes);
 // app.use(`/api/${API_VERSION}/uploads`, uploadRoutes);
 app.use(`/api/${API_VERSION}/otp`, otpRoutes);
 
@@ -230,7 +232,7 @@ async function startServer() {
 
     // Sync database models
     if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync({ alter: false });
       logger.info("Database models synchronized.");
     }
 

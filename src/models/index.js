@@ -23,6 +23,7 @@ import Like from "./Like.js";
 import AgendaCheckIn from "./AgendaCheckIn.js";
 import Agenda from "./Agenda.js";
 import { SponsorPass } from "./SponsorPass.js";
+import QRCode from "./QRCode.js";
 
 // User associations
 User.hasMany(Post, { foreignKey: "authorId", as: "posts" });
@@ -209,6 +210,11 @@ AgendaCheckIn.belongsTo(Agenda, { foreignKey: "agendaId", as: "agenda" });
 // Agenda associations
 Agenda.hasMany(AgendaCheckIn, { foreignKey: "agendaId", as: "checkIns" });
 
+// QRCode associations
+User.hasMany(QRCode, { foreignKey: "userId", as: "qrCodes" });
+QRCode.belongsTo(User, { foreignKey: "userId", as: "user" });
+QRCode.belongsTo(User, { foreignKey: "scannedBy", as: "scanner" });
+
 export {
   User,
   Post,
@@ -235,4 +241,5 @@ export {
   AgendaCheckIn,
   Agenda,
   SponsorPass,
+  QRCode,
 };

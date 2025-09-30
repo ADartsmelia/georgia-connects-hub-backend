@@ -4,11 +4,11 @@ import { logger } from "../utils/logger.js";
 // Database configuration
 const config = {
   development: {
-    username: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASSWORD || "password",
-    database: process.env.DB_NAME || "georgia_connects_hub_dev",
+    username: process.env.DB_USERNAME || process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD || "postgres123",
+    database: process.env.DB_NAME || "georgia_connects_hub",
     host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 5433,
+    port: parseInt(process.env.DB_PORT) || 5433,
     dialect: "postgres",
     logging: (msg) => logger.debug(msg),
     pool: {
@@ -25,7 +25,7 @@ const config = {
     },
   },
   test: {
-    username: process.env.DB_USER || "postgres",
+    username: process.env.DB_USERNAME || process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "password",
     database: process.env.DB_NAME + "_test" || "georgia_connects_hub_test",
     host: process.env.DB_HOST || "localhost",

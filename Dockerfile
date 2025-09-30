@@ -1,5 +1,5 @@
-# Use Node.js 20 Alpine for smaller image size
-FROM node:20-alpine
+# Use Node.js 22 Alpine for smaller image size and latest LTS
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
@@ -39,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start the application
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
