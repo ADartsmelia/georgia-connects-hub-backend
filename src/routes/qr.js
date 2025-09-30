@@ -362,7 +362,7 @@ router.post(
       const qrCodeBuffer = await QRCode.toBuffer(code, {
         type: "png",
         width: 200, // Reduced from 400 to 200
-        margin: 1,  // Reduced margin
+        margin: 1, // Reduced margin
         color: {
           dark: "#000000",
           light: "#FFFFFF",
