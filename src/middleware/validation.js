@@ -78,7 +78,7 @@ export const completeProfileSchema = Joi.object({
       "any.required": "Experience level is required",
     }),
   location: Joi.string().max(100).optional().allow(""),
-  phoneNumber: Joi.string().optional().allow(""),
+  phoneNumber: Joi.string().min(1).max(15).optional().allow(""),
   bio: Joi.string().max(1000).optional().allow(""),
 });
 
@@ -99,7 +99,7 @@ export const updateProfileSchema = Joi.object({
   location: Joi.string().min(1).max(100).optional(),
   bio: Joi.string().max(1000).optional(),
   phoneNumber: Joi.string()
-    .min(10)
+    .min(1)
     .max(15)
     .pattern(/^[0-9]+$/)
     .optional(),

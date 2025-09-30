@@ -45,7 +45,7 @@ export const User = sequelize.define(
       type: DataTypes.STRING(15),
       allowNull: true,
       validate: {
-        len: [10, 15],
+        len: [1, 15], // Allow shorter phone numbers
       },
     },
     company: {
