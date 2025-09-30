@@ -19,35 +19,45 @@ const s3Client = new S3Client({
 });
 
 /**
+ * Upload file to DigitalOcean Spaces
+ * @param {Buffer} fileBuffer - File buffer
+ * @param {string} filename - Filename with extension
+ * @param {string} folder - Folder path (e.g., 'posts', 'qr-codes')
+ * @param {string} contentType - MIME type
+ * @returns {Promise<string>} - Public URL of uploaded file
+ */
+export async function uploadFileToSpaces(fileBuffer, filename, folder = "uploads", contentType = "application/octet-stream") {
+  try {
+    const key = `${folder}/${filename}`;
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.DO_SPACES_BUCKET,
+      Key: key,
+      Body: fileBuffer,
+      ContentType: contentType,
+      ACL: "public-read", // Make file publicly accessible
+      CacheControl: "max-age=31536000", // Cache for 1 year
+    });
+
+    await s3Client.send(command);
+
+    const publicUrl = `https://${process.env.DO_SPACES_BUCKET}.${process.env.DO_SPACES_ENDPOINT}/${key}`;
+    console.log(`✅ File uploaded to Spaces: ${publicUrl}`);
+    return publicUrl;
+  } catch (error) {
+    console.error("❌ Error uploading file to Spaces:", error);
+    throw error;
+  }
+}
+
+/**
  * Upload QR code image to DigitalOcean Spaces
  * @param {Buffer} qrCodeBuffer - QR code image buffer
  * @param {string} qrCode - QR code string for filename
  * @returns {Promise<string>} - Public URL of uploaded image
  */
 export async function uploadQRCodeToSpaces(qrCodeBuffer, qrCode) {
-  try {
-    const key = `qr-codes/${qrCode}.png`;
-
-    const command = new PutObjectCommand({
-      Bucket: process.env.DO_SPACES_BUCKET,
-      Key: key,
-      Body: qrCodeBuffer,
-      ContentType: "image/png",
-      ACL: "public-read", // Make image publicly accessible
-      CacheControl: "max-age=31536000", // Cache for 1 year
-    });
-
-    await s3Client.send(command);
-
-    // Return public URL
-    const publicUrl = `https://${process.env.DO_SPACES_BUCKET}.${process.env.DO_SPACES_ENDPOINT}/${key}`;
-    console.log(`✅ QR code uploaded to Spaces: ${publicUrl}`);
-
-    return publicUrl;
-  } catch (error) {
-    console.error("❌ Error uploading QR code to Spaces:", error);
-    throw error;
-  }
+  return uploadFileToSpaces(qrCodeBuffer, `${qrCode}.png`, "qr-codes", "image/png");
 }
 
 /**

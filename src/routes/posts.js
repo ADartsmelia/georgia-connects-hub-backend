@@ -17,21 +17,23 @@ import {
   AuthorizationError,
 } from "../middleware/errorHandler.js";
 import { logger } from "../utils/logger.js";
+import { uploadFileToSpaces } from "../utils/spaces.js";
 
 const router = express.Router();
 
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/posts/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename =
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname);
-    cb(null, filename);
-  },
-});
+// Helper function to upload post image to DigitalOcean Spaces
+const uploadPostImageToSpaces = async (fileBuffer, filename, contentType) => {
+  try {
+    const s3Url = await uploadFileToSpaces(fileBuffer, filename, "posts", contentType);
+    return s3Url;
+  } catch (error) {
+    logger.error("Error uploading post image to Spaces:", error);
+    throw error;
+  }
+};
+
+// Configure multer for memory storage (for S3 upload)
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype && file.mimetype.startsWith("image/")) {
@@ -44,7 +46,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit (increased for testing)
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: fileFilter,
 });
@@ -179,8 +181,22 @@ router.post(
 
     // Add image-specific data
     if (imageFile) {
-      postData.mediaUrl = `/uploads/posts/${imageFile.filename}`;
-      postData.mediaType = imageFile.mimetype;
+      try {
+        // Generate unique filename for Spaces
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        const filename = `post-${uniqueSuffix}${path.extname(imageFile.originalname)}`;
+        
+        // Upload image to DigitalOcean Spaces
+        const s3Url = await uploadPostImageToSpaces(imageFile.buffer, filename, imageFile.mimetype);
+        
+        postData.mediaUrl = s3Url;
+        postData.mediaType = imageFile.mimetype;
+        
+        logger.info(`Post image uploaded to Spaces: ${s3Url}`);
+      } catch (error) {
+        logger.error("Failed to upload post image to Spaces:", error);
+        throw new ValidationError("Failed to upload image");
+      }
     }
 
     // Add poll-specific data
