@@ -3,6 +3,7 @@ import crypto from "crypto";
 import QRCode from "qrcode";
 import fs from "fs";
 import path from "path";
+import { uploadQRCodeToSpaces } from "../utils/spaces.js";
 import { fileURLToPath } from "url";
 import QRCodeModel from "../models/QRCode.js";
 import { User } from "../models/index.js";
@@ -358,24 +359,27 @@ router.post(
         status: "active",
       });
 
-      // Generate QR code as base64 data URL (very small size for email embedding)
-      const qrCodeDataURL = await QRCode.toDataURL(code, {
+      // Generate QR code as buffer for Spaces upload
+      const qrCodeBuffer = await QRCode.toBuffer(code, {
         type: "png",
-        width: 150, // Very small size to prevent SendGrid attachment conversion
-        margin: 1,
+        width: 300, // Larger size since it's hosted externally
+        margin: 2,
         color: {
           dark: "#000000",
           light: "#FFFFFF",
         },
       });
 
-      // Prepare email data with embedded QR code
+      // Upload QR code to DigitalOcean Spaces
+      const qrCodeUrl = await uploadQRCodeToSpaces(qrCodeBuffer, code);
+
+      // Prepare email data with Spaces QR code URL
       const emailData = {
         recipientName:
           recipientName ||
           (user ? `${user.firstName} ${user.lastName}` : "Guest"),
         qrCode: code,
-        qrCodeImage: qrCodeDataURL, // Base64 data URL for direct embedding
+        qrCodeImage: qrCodeUrl, // DigitalOcean Spaces URL
         passType: passType,
         passTypeClass: passType === "day_pass" ? "day-pass" : "full-pass",
         isDayPass: passType === "day_pass",

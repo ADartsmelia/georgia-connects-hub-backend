@@ -228,7 +228,7 @@ const templates = {
           <div class="header">
             <h1>🎟️ Networking Georgia</h1>
             <h2>Your Event Pass is Ready!</h2>
-            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v4</p>
+            <p style="color: #666; font-size: 12px;">Template Version: 2025-09-30-v5 (Spaces)</p>
           </div>
           <div class="content">
             <!-- Simple Header -->
