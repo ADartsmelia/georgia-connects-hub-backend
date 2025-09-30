@@ -318,7 +318,7 @@ export const sendEmail = async ({
           filename: attachment.filename,
           type: attachment.contentType || "image/png",
           disposition: attachment.cid ? "inline" : "attachment",
-          contentId: attachment.cid,
+          content_id: attachment.cid, // Changed from contentId to content_id
         };
       } else {
         // Use buffer content
@@ -327,7 +327,7 @@ export const sendEmail = async ({
           filename: attachment.filename,
           type: attachment.contentType || "image/png",
           disposition: attachment.cid ? "inline" : "attachment",
-          contentId: attachment.cid,
+          content_id: attachment.cid, // Changed from contentId to content_id
         };
       }
     });
@@ -336,12 +336,14 @@ export const sendEmail = async ({
     const msg = {
       to: email,
       from: {
-        email: process.env.SENDGRID_FROM_EMAIL || "noreply@networkinggeorgia.com",
+        email:
+          process.env.SENDGRID_FROM_EMAIL || "noreply@networkinggeorgia.com",
         name: process.env.SENDGRID_FROM_NAME || "Networking Georgia",
       },
       subject: emailTemplate.subject || subject,
       html: html,
-      attachments: sendGridAttachments.length > 0 ? sendGridAttachments : undefined,
+      attachments:
+        sendGridAttachments.length > 0 ? sendGridAttachments : undefined,
     };
 
     // Debug logging
