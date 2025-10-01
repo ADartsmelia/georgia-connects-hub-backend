@@ -49,11 +49,11 @@ async function addCheckInLimits() {
             "Leo Institute-ის ვორქშოპი – Anna & Sami Cohen (The Art of Connection)",
           limit: 150,
         },
-        { title: "ნუტრიციოლოგის სესია – თორნიკე ენუქიძე", limit: 30 },
+        { title: "ნუტრიციოლოგის სესია – თორნიკე ენუქიძე", limit: 50 },
         { title: "ვორქშოპი: The Art of Signature by Signify", limit: 50 },
         {
           title: "ვორქშოპი – თამუნა ჩიჩუა (The Art of Leading with Questions)",
-          limit: 50,
+          limit: 30,
         },
         { title: "ვორქშოპი – სოსო გალუმაშვილი (The Art of Trust)", limit: 150 },
       ];
