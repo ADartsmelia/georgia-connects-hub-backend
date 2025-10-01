@@ -70,13 +70,20 @@ router.get("/", authenticate, async (req, res) => {
         };
       }
 
+      const checkInCount = checkInCountMap[item.id] || 0;
+      const isFull = item.checkInLimit
+        ? checkInCount >= item.checkInLimit
+        : false;
+
       const agendaItem = {
         id: item.id,
         time: item.time,
         title: item.title,
         requiresCheckIn: item.requiresCheckIn,
         checkedIn: !!userCheckInMap[item.id],
-        checkInCount: checkInCountMap[item.id] || 0,
+        checkInCount: checkInCount,
+        checkInLimit: item.checkInLimit,
+        isFull: isFull,
       };
 
       if (item.isParallel) {
@@ -121,6 +128,16 @@ router.post("/checkin", authenticate, async (req, res) => {
       });
     }
 
+    // Get the agenda item to check limits
+    const agendaItem = await Agenda.findByPk(agendaId);
+
+    if (!agendaItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Agenda item not found",
+      });
+    }
+
     // Check if user already checked in
     const existingCheckIn = await AgendaCheckIn.findOne({
       where: {
@@ -134,6 +151,22 @@ router.post("/checkin", authenticate, async (req, res) => {
         success: false,
         message: "Already checked in to this agenda item",
       });
+    }
+
+    // Check if check-in limit is reached
+    if (agendaItem.checkInLimit) {
+      const currentCheckInCount = await AgendaCheckIn.count({
+        where: {
+          agendaId,
+        },
+      });
+
+      if (currentCheckInCount >= agendaItem.checkInLimit) {
+        return res.status(400).json({
+          success: false,
+          message: "Check-in limit reached for this event",
+        });
+      }
     }
 
     // Create check-in
@@ -153,6 +186,7 @@ router.post("/checkin", authenticate, async (req, res) => {
       userId,
       agendaId,
       checkInCount,
+      limit: agendaItem.checkInLimit,
     });
 
     res.json({
@@ -172,6 +206,71 @@ router.post("/checkin", authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to check in",
+    });
+  }
+});
+
+// Cancel check-in to an agenda item
+router.delete("/checkin/:agendaId", authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { agendaId } = req.params;
+
+    // Validate required fields
+    if (!agendaId) {
+      logger.error("Missing required field:", { agendaId });
+      return res.status(400).json({
+        success: false,
+        message: "Missing required field: agendaId",
+      });
+    }
+
+    // Find the check-in
+    const checkIn = await AgendaCheckIn.findOne({
+      where: {
+        userId,
+        agendaId,
+      },
+    });
+
+    if (!checkIn) {
+      return res.status(404).json({
+        success: false,
+        message: "Check-in not found",
+      });
+    }
+
+    // Delete the check-in
+    await checkIn.destroy();
+
+    // Get updated count for this agenda item
+    const checkInCount = await AgendaCheckIn.count({
+      where: {
+        agendaId,
+      },
+    });
+
+    logger.info(
+      `User ${userId} cancelled check-in to agenda item: ${agendaId}`,
+      {
+        userId,
+        agendaId,
+        checkInCount,
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "Successfully cancelled check-in",
+      data: {
+        checkInCount,
+      },
+    });
+  } catch (error) {
+    logger.error("Error cancelling check-in:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel check-in",
     });
   }
 });

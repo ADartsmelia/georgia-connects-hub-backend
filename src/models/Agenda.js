@@ -39,6 +39,14 @@ const Agenda = sequelize.define(
       defaultValue: false,
       comment: "Whether this item requires check-in",
     },
+    checkInLimit: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Maximum number of check-ins allowed (null = unlimited)",
+      validate: {
+        min: 0,
+      },
+    },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
