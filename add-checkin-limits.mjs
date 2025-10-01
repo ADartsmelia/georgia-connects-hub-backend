@@ -47,15 +47,15 @@ async function addCheckInLimits() {
         {
           title:
             "Leo Institute-ის ვორქშოპი – Anna & Sami Cohen (The Art of Connection)",
-          limit: 100,
+          limit: 150,
         },
         { title: "ნუტრიციოლოგის სესია – თორნიკე ენუქიძე", limit: 30 },
-        { title: "ვორქშოპი: The Art of Signature by Signify", limit: 30 },
+        { title: "ვორქშოპი: The Art of Signature by Signify", limit: 50 },
         {
           title: "ვორქშოპი – თამუნა ჩიჩუა (The Art of Leading with Questions)",
-          limit: 30,
+          limit: 50,
         },
-        { title: "ვორქშოპი – სოსო გალუმაშვილი (The Art of Trust)", limit: 80 },
+        { title: "ვორქშოპი – სოსო გალუმაშვილი (The Art of Trust)", limit: 150 },
       ];
 
       console.log("\n🔄 Setting check-in limits for events...");
