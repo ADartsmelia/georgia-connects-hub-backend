@@ -114,7 +114,12 @@ const corsOptions = {
     "Origin",
     "X-Requested-With",
     "Accept",
+    "Content-Length",
+    "Cache-Control",
+    "X-File-Name",
   ],
+  exposedHeaders: ["Content-Length", "X-File-Name"],
+  maxAge: 86400, // 24 hours
 };
 
 app.use(cors(corsOptions));
