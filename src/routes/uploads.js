@@ -55,7 +55,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit to match frontend
   },
 });
 
@@ -447,7 +447,7 @@ router.get("/config", authenticate, (req, res) => {
   res.json({
     success: true,
     data: {
-      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFileSize: 50 * 1024 * 1024, // 50MB
       allowedTypes: {
         images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
         videos: ["video/mp4", "video/webm", "video/quicktime"],
