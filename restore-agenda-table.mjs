@@ -40,11 +40,12 @@ async function restoreAgendaTable() {
       { day: "Day 1", itemIndex: 7, isParallel: false, time: "15:30-16:00", title: "სპიკერი N4 დავით კიკვიძე – The Art of Innovation", requiresCheckIn: false },
       { day: "Day 1", itemIndex: 8, isParallel: false, time: "16:00-17:00", title: "კიკალა სტუდიოს ფოტოგრაფიის მასტერკლასი – ვახტანგ ალანია (The Art of Photography)", requiresCheckIn: true, checkInLimit: 50 },
       { day: "Day 1", itemIndex: 9, isParallel: false, time: "17:00-17:30", title: "სპიკერი N5 თაზო ლეჟავა – The Art of AI", requiresCheckIn: false },
-      { day: "Day 1", itemIndex: 10, isParallel: false, time: "17:30-18:00", title: "სპიკერი N6 სანდრო ჯეჯელავა – The Art of Modern Leadership", requiresCheckIn: false },
-      { day: "Day 1", itemIndex: 11, isParallel: false, time: "18:00-20:00", title: "თავისუფალი დრო", requiresCheckIn: false },
-      { day: "Day 1", itemIndex: 12, isParallel: false, time: "20:00-23:00", title: "ვახშამი და ცოცხალი მუსიკა (Showtime Band)", requiresCheckIn: false },
-      { day: "Day 1", itemIndex: 13, isParallel: false, time: "21:00-21:15", title: "აუდიო-ვიზუალური შოუ Ambavi-სგან", requiresCheckIn: false },
-      { day: "Day 1", itemIndex: 14, isParallel: false, time: "23:00", title: "Afterparty (Bessarionn)", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 10, isParallel: false, time: "17:00-19:30", title: "სარაჯიშვილი Welcome Drinks at Secret Room", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 11, isParallel: false, time: "17:30-18:00", title: "სპიკერი N6 სანდრო ჯეჯელავა – The Art of Modern Leadership", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 12, isParallel: false, time: "18:00-20:00", title: "თავისუფალი დრო", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 13, isParallel: false, time: "20:00-23:00", title: "ვახშამი და ცოცხალი მუსიკა (Showtime Band)", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 14, isParallel: false, time: "21:00-21:15", title: "აუდიო-ვიზუალური შოუ Ambavi-სგან", requiresCheckIn: false },
+      { day: "Day 1", itemIndex: 15, isParallel: false, time: "23:00", title: "Afterparty (Bessarionn)", requiresCheckIn: false },
       
       // Day 1 - Parallel items
       { day: "Day 1", itemIndex: 0, isParallel: true, time: "13:30-18:00", title: "თიმბილდინგი და გასართობი აქტივობები (სპორტული და სააზროვნო)", requiresCheckIn: false },
